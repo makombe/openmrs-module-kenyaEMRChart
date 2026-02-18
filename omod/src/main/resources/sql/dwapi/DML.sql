@@ -3714,7 +3714,7 @@ CREATE PROCEDURE sp_populate_dwapi_prep_monthly_refill()
            max(if(o.concept_id = 161641, (case o.value_coded when 159836 then "Discontinue" when 162904 then "Restart" when 164515 then "Switch"  when 159835 then "Continue" else "" end), "" )) as prep_status,
            max(if(o.concept_id = 167788, (case o.value_coded when 159737 then "Client Preference" when 160662 then "Stock-out" when 121760 then "Adverse Drug Reactions" when 141748 then "Drug Interactions" when 167533 then "Discontinuing Injection PrEP" else "" end), "" )) as switching_option,
            max(if(o.concept_id = 165144, o.value_datetime, null )) as switching_date,
-           max(if(o.concept_id = 166535, (case o.value_coded when 5424 then "Event Driven" when 165269 then "Daily Oral PrEP" when 168050 then "Long acting PrEP" else "" end), "" )) as dosing_strategy,
+           max(if(o.concept_id = 166535, (case o.value_coded when 5424 then "Event Driven" when 165269 then "Daily Oral PrEP" when 168050 then "Long acting PrEP" when 2032237 then "Long acting PrEP" else "" end), "" )) as dosing_strategy,
            max(if(o.concept_id = 166866, (case o.value_coded when 165269 then "Daily Oral PrEP" when 168050 then "CAB-LA" when 168049 then "Dapivirine ring" when 5424 then "Event Driven"  when 168709 then "Lenacapavir" else "" end), "" )) as prep_type,
            max(if(o.concept_id = 1417, (case o.value_coded when 1065 then "Yes" when 1066 then "No" else "" end), "" )) as prescribed_prep_today,
            max(if(o.concept_id = 164515, (case o.value_coded when 161364 then "TDF/3TC" when 84795 then "TDF" when 104567 then "TDF/FTC(Preferred)" when 168050 then "CAB-LA" when 168049 then "Dapivirine Ring"  else "" end), "" )) as prescribed_regimen,
@@ -3839,7 +3839,7 @@ CREATE PROCEDURE sp_populate_dwapi_prep_enrolment()
            max(if(o.concept_id = 160555, o.value_datetime, null )) as initial_enrolment_date,
            max(if(o.concept_id = 159599, o.value_datetime, null )) as date_started_prep_trf_facility,
            max(if(o.concept_id = 160533, (case o.value_coded when 1065 then "Yes" when 1066 then "No" else "" end), "" )) as previously_on_prep,
-           max(if(o.concept_id = 166535, (case o.value_coded when 5424 then "Event Driven" when 165269 then "Daily Oral PrEP" when 168050 then "Long acting PrEP" else "" end), "" )) as dosing_strategy,
+           max(if(o.concept_id = 166535, (case o.value_coded when 5424 then "Event Driven" when 165269 then "Daily Oral PrEP" when 168050 then "Long acting PrEP" when 2032237 then "Long acting PrEP" else "" end), "" )) as dosing_strategy,
            max(if(o.concept_id = 166866, (case o.value_coded when 165269 then "Daily Oral PrEP" when 168050 then "CAB-LA" when 168049 then "Dapivirine ring" when 5424 then "Event Driven" when 168709 then "Lenacapavir" else "" end), "" )) as prep_type,
            max(if(o.concept_id = 1088, (case o.value_coded when 104567 then "TDF/FTC" when 84795 then "TDF" when 161364 then "TDF/3TC" else "" end), "" )) as regimen,
            max(if(o.concept_id = 162881, o.value_datetime, null )) as prep_last_date,
@@ -3993,7 +3993,7 @@ CREATE PROCEDURE sp_populate_dwapi_prep_followup()
         max(if(o.concept_id = 165241, o.value_coded, null)) as other_reason_for_prep,
         max(if(o.concept_id = 167788, (case o.value_coded when 159737 then "Client Preference" when 160662 then "Stock-out" when 121760 then "Adverse Drug Reactions" when 141748 then "Drug Interactions" when 167533 then "Discontinuing Injection PrEP" else "" end), "" )) as switching_option,
         max(if(o.concept_id = 165144, o.value_datetime, null )) as switching_date,
-        max(if(o.concept_id = 166535, (case o.value_coded when 5424 then "Event Driven" when 165269 then "Daily Oral PrEP" when 168050 then "Long acting PrEP" else "" end), "" )) as dosing_strategy,
+        max(if(o.concept_id = 166535, (case o.value_coded when 5424 then "Event Driven" when 165269 then "Daily Oral PrEP" when 168050 then "Long acting PrEP" when 2032237 then "Long acting PrEP" else "" end), "" )) as dosing_strategy,
         max(if(o.concept_id = 166866, (case o.value_coded when 165269 then "Daily Oral PrEP" when 168050 then "CAB-LA" when 168049 then "Dapivirine ring" when 5424 then "Event Driven"  when 168709 then "Lenacapavir" else "" end), "" )) as prep_type,
         max(if(o.concept_id = 1417, (case o.value_coded when 1065 then "Yes" when 1066 then "No" end), "" )) as prescribed_PrEP,
         max(if(o.concept_id = 164515, (case o.value_coded when 161364 then "TDF/3TC" when 84795 then "TDF" when 104567 then "TDF/FTC(Preferred)" when 168050 then "CAB-LA" when 168049 then "Dapivirine Ring" end), "" )) as regimen_prescribed,
@@ -4236,7 +4236,6 @@ CREATE PROCEDURE sp_populate_dwapi_patient_program()
 				when '24d05d30-0488-11ea-8d71-362b9e155667' then 'OTZ'
 				when '6eda83f0-09d9-11ea-8d71-362b9e155667' then 'OVC'
 				when '7447305a-18a7-11e9-ab14-d663bd873d93' then 'KVP'
-                when '24d05d30-0488-11ea-8d71-362b9e155667' then 'OTZ'
                 when 'e41c3d74-37c7-4001-9f19-ef9e35224b70' then 'Violence screening'
                 when '228538f4-cad9-476b-84c3-ab0086150bcc' then 'VMMC'
                 when '4b898e20-9b2d-11ee-b9d1-0242ac120002' then 'MAT'
@@ -4244,6 +4243,11 @@ CREATE PROCEDURE sp_populate_dwapi_patient_program()
                 when 'ffee43c4-9ccd-4e55-8a70-93194e7fafc6' then 'NCD'
                 when '8cd42506-2ebd-485f-89d6-4bb9ed328ccc' then 'CPM'
                 when '214cad1c-bb62-4d8e-b927-810a046daf62' then 'PrEP'
+                when '504f179b-4a13-4790-9ecd-ca4963448af8' then 'Nutrition'
+                when '72635673-0613-4259-916e-e0d5d5ef8f66' then 'Antenatal Care'
+                when '286598d5-1886-4f0d-9e5f-fa5473399cee' then 'Postnatal Care'
+                when '191269d2-9973-4958-9936-f687ed771050' then 'Family Planning'
+                when 'fd549de0-2e6d-4e76-a2c1-64df26351bdd' then 'Pre-Conception Care'
 				end) as program,
 				pp.date_enrolled,
 				pp.date_completed,
