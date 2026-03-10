@@ -11534,6 +11534,173 @@ BEGIN
     SELECT "Completed processing ATP Transition readiness assessment";
 END $$
 
+
+
+
+-- Procedure sp_update_ATP Disclosure Tracking
+DROP PROCEDURE IF EXISTS sp_update_etl_atp_disclosure_tracking $$
+CREATE PROCEDURE sp_update_etl_atp_disclosure_tracking(IN last_update_time DATETIME)
+BEGIN
+    SELECT "Processing ATP Disclosure tracking";
+    INSERT INTO kenyaemr_etl.etl_atp_disclosure_tracking (
+           uuid,
+           provider,
+           patient_id,
+           visit_id,
+           visit_date,
+           location_id,
+           encounter_id,
+          chilld_primary_caregiver,
+          other_primary_caregiver,
+          who_brought_child_clinic,
+          other_who_brought_child_clinic,
+          clinic_report_child_knowsHave_Hiv,
+          child_knows_have_hiv,
+          child_know_have_illness,
+          child_response_why_take_medicaiton,
+          other_child_response_why_take_medicaiton,
+          who_brought_child_clinic_today,
+          disclosure_counseling_done,
+          no_disclosure_counseling_done_why,
+          content_of_disclosure_counseling,
+          other_why_no_disclosure_counseling_done,
+          place_full_dislosure_occured,
+          is_date_of_full_disclosure_known,
+          date_of_full_disclosure,
+          date_of_full_disclosure_not_known_specify,
+          who_conducted_full_disclosure,
+          other_who_conducted_full_disclosure,
+          nature_of_disclosure,
+          child_reactions_dislosure,
+          cadre,
+          department,
+          date_of_followup_visit,
+          caregiver_reflection_behaviour,
+          caregiver_reflection_mood,
+          caregiver_reflection_adherence,
+          caregiver_reflection_interaction_caregiver,
+          provider_reflection_behaviour,
+          provider_reflection_mood,
+          provider_reflection_adherence,
+          provider_reflection_interaction_caregiver,
+          provider_reflection_interaction_provider,
+          action_taken_at_visit,
+          action_plan_caregiver,
+          action_plan_child,
+          who_else_told_child_hiv_status,
+
+           date_created,
+           date_last_modified)
+    select e.uuid,
+           e.creator,
+           e.patient_id,
+           e.visit_id,
+           date(e.encounter_datetime)                                            as visit_date,
+           e.location_id,
+           e.encounter_id,
+          max(if(o.concept_id = 2010456, o.value_coded, null))      as chilld_primary_caregiver,
+           max(if(o.concept_id = 161011, o.value_text, null))      as other_primary_caregiver,
+           max(if(o.concept_id = 969, o.value_coded, null))     as who_brought_child_clinic,
+           max(if(o.concept_id = 164879, o.value_text, null))   as other_who_brought_child_clinic,
+           max(if(o.concept_id = 1000164, o.value_coded, null))   as clinic_report_child_knowsHave_Hiv,
+           max(if(o.concept_id = 5303, o.value_coded, null)) as child_knows_have_hiv, 
+           max(if(o.concept_id = 2031957, o.value_coded, null)) as child_know_have_illness, 
+           max(if(o.concept_id = 160119, o.value_coded, null)) as child_response_why_take_medicaiton, 
+           max(if(o.concept_id = 2032077, o.value_text, null)) as other_child_response_why_take_medicaiton, 
+           max(if(o.concept_id = 2031918, o.value_text, null)) as who_brought_child_clinic_today, 
+           max(if(o.concept_id = 165070, o.value_coded, null)) as disclosure_counseling_done, 
+           max(if(o.concept_id = 164995, o.value_coded, null)) as no_disclosure_counseling_done_why,
+
+           max(if(o.concept_id = 164992, o.value_text, null)) as content_of_disclosure_counseling, 
+           max(if(o.concept_id = 163104, o.value_text, null)) as other_why_no_disclosure_counseling_done, 
+
+           max(if(o.concept_id = 2031696, o.value_coded, null)) as place_full_dislosure_occured, 
+           max(if(o.concept_id = 1000164, o.value_coded, null)) as is_date_of_full_disclosure_known, 
+           max(if(o.concept_id = 160753, o.value_datetime, null)) as date_of_full_disclosure, 
+           max(if(o.concept_id = 164433, o.value_text, null)) as date_of_full_disclosure_not_known_specify, 
+           max(if(o.concept_id = 159425, o.value_coded, null)) as who_conducted_full_disclosure, 
+           max(if(o.concept_id = 162169, o.value_text, null)) as other_who_conducted_full_disclosure, 
+           max(if(o.concept_id = 169422, o.value_coded, null)) as nature_of_disclosure, 
+           max(if(o.concept_id = 160632, o.value_text, null)) as child_reactions_dislosure, 
+           max(if(o.concept_id = 163258, o.value_text, null)) as cadre, 
+           max(if(o.concept_id = 162724, o.value_text, null)) as department, 
+           max(if(o.concept_id = 5096, o.value_datetime, null)) as date_of_followup_visit,
+           max(if(o.obs_group = 1528 and o.concept_id = 1562,o.value_coded, NULL)) as caregiver_reflection_behaviour,
+           max(if(o.obs_group = 1528 and o.concept_id = 167099,o.value_coded, NULL)) as caregiver_reflection_mood,
+           max(if(o.obs_group = 1528 and o.concept_id = 164425,o.value_coded, NULL)) as caregiver_reflection_adherence,
+           max(if(o.obs_group = 1528 and o.concept_id = 165995,o.value_coded, NULL)) as caregiver_reflection_interaction_caregiver,
+
+           max(if(o.obs_group = 1796 and o.concept_id = 1562,o.value_coded, NULL)) as provider_reflection_behaviour,
+           max(if(o.obs_group = 1796 and o.concept_id = 167099,o.value_coded, NULL)) as provider_reflection_mood,
+           max(if(o.obs_group = 1796 and o.concept_id = 164425,o.value_coded, NULL)) as provider_reflection_adherence,
+           max(if(o.obs_group = 1796 and o.concept_id = 165995,o.value_coded, NULL)) as provider_reflection_interaction_caregiver,
+           max(if(o.obs_group = 1796 and o.concept_id = 163556,o.value_coded, NULL)) as provider_reflection_interaction_provider,
+            max(if(o.concept_id = 164378, o.value_text, null)) as action_taken_at_visit, 
+            max(if(o.concept_id = 2032082, o.value_text, null)) as action_plan_caregiver, 
+            max(if(o.concept_id = 2032081, o.value_text, null)) as action_plan_child, 
+            max(if(o.concept_id = 163108, o.value_text, null)) as who_else_told_child_hiv_status,
+
+           e.date_created,
+           e.date_changed
+    from encounter e
+             inner join person p on p.person_id = e.patient_id and p.voided = 0
+             inner join form f on f.form_id = e.form_id and f.uuid = '40b6b389-5b4e-47b1-aa15-88ee24b56f6a'
+             left outer join obs o on o.encounter_id = e.encounter_id and o.concept_id in                                               
+                                 (2010456,161011,969,164879,1000164,5303,2031957,160119,2032077,2031918,165070,164995,164992,163104,2031696,
+                                160753,164433,159425,162169,169422,160632,163258,162724,5096,1562,167099,164425,165995,163556,1796,1528)
+        and o.voided = 0
+    where e.voided = 0
+    and e.date_created >= last_update_time
+       or e.date_changed >= last_update_time
+       or e.date_voided >= last_update_time
+       or o.date_created >= last_update_time
+       or o.date_voided >= last_update_time
+    group by e.patient_id, date(e.encounter_datetime)
+    ON DUPLICATE KEY UPDATE provider=VALUES(provider),
+    visit_date=VALUES(visit_date),
+                            chilld_primary_caregiver=VALUES(chilld_primary_caregiver),
+                            other_primary_caregiver=VALUES(other_primary_caregiver),
+                            who_brought_child_clinic=VALUES(who_brought_child_clinic),
+                            other_who_brought_child_clinic=VALUES(other_who_brought_child_clinic),
+                            clinic_report_child_knowsHave_Hiv=VALUES(clinic_report_child_knowsHave_Hiv),
+                            child_knows_have_hiv=VALUES(child_knows_have_hiv),
+                            child_know_have_illness=VALUES(child_know_have_illness),
+                            child_response_why_take_medicaiton=VALUES(child_response_why_take_medicaiton),
+                            other_child_response_why_take_medicaiton=VALUES(other_child_response_why_take_medicaiton),
+                            who_brought_child_clinic_today=VALUES(who_brought_child_clinic_today),
+                            disclosure_counseling_done=VALUES(disclosure_counseling_done),
+                            no_disclosure_counseling_done_why=VALUES(no_disclosure_counseling_done_why),
+                            content_of_disclosure_counseling=VALUES(content_of_disclosure_counseling),
+                            other_why_no_disclosure_counseling_done=VALUES(other_why_no_disclosure_counseling_done),
+                            place_full_dislosure_occured=VALUES(place_full_dislosure_occured),
+                            is_date_of_full_disclosure_known=VALUES(is_date_of_full_disclosure_known),
+                            date_of_full_disclosure=VALUES(date_of_full_disclosure),
+                            date_of_full_disclosure_not_known_specify=VALUES(date_of_full_disclosure_not_known_specify),
+                            who_conducted_full_disclosure=VALUES(who_conducted_full_disclosure),
+                            nature_of_disclosure=VALUES(nature_of_disclosure),
+                            cadre=VALUES(cadre),
+                            department=VALUES(department),
+                            date_of_followup_visit=VALUES(date_of_followup_visit),
+                            caregiver_reflection_behaviour=VALUES(caregiver_reflection_behaviour),
+                            caregiver_reflection_mood=VALUES(caregiver_reflection_mood),
+                            caregiver_reflection_adherence=VALUES(caregiver_reflection_adherence),
+                            caregiver_reflection_interaction_caregiver=VALUES(caregiver_reflection_interaction_caregiver),
+                            provider_reflection_behaviour=VALUES(provider_reflection_behaviour),
+                            provider_reflection_mood=VALUES(provider_reflection_mood),
+                            provider_reflection_adherence=VALUES(provider_reflection_adherence),
+                            provider_reflection_interaction_caregiver=VALUES(provider_reflection_interaction_caregiver),
+                            provider_reflection_interaction_provider=VALUES(provider_reflection_interaction_provider),
+                            action_taken_at_visit=VALUES(action_taken_at_visit),
+                            action_plan_caregiver=VALUES(action_plan_caregiver),
+                            action_plan_child=VALUES(action_plan_child),
+                            who_else_told_child_hiv_status=VALUES(who_else_told_child_hiv_status),
+
+
+     date_created=VALUES(date_created),
+     date_last_modified=VALUES(date_last_modified);
+    SELECT "Completed processing ATP Disclosure tracking";
+END $$
+
 -- ------------- Procedure sp_update_etl_ncd_enrollment-------------------------
 
 DROP PROCEDURE IF EXISTS sp_update_etl_ncd_enrollment $$
@@ -12215,6 +12382,7 @@ CREATE PROCEDURE sp_scheduled_updates()
     CALL sp_update_etl_atp_disclosure_readiness_assessment(last_update_time);
     CALL sp_update_etl_atp_taking_charge_tracking(last_update_time);
     CALL sp_update_etl_atp_transition_readiness_assessment(last_update_time);
+    CALL sp_update_etl_atp_disclosure_tracking(last_update_time);
     CALL sp_update_etl_ncd_enrollment(last_update_time);
     CALL sp_update_etl_ncd_followup(last_update_time);
     CALL sp_update_etl_inpatient_admission(last_update_time);

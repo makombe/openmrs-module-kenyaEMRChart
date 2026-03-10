@@ -124,6 +124,7 @@ DROP TABLE IF EXISTS kenyaemr_etl.etl_doctor_progress_note;
 DROP TABLE IF EXISTS kenyaemr_etl.etl_atp_transition_readiness_assessment;
 DROP TABLE IF EXISTS kenyaemr_etl.etl_atp_taking_charge_tracking;
 DROP TABLE IF EXISTS kenyaemr_etl.etl_atp_disclosure_readiness_assessment;
+DROP TABLE IF EXISTS kenyaemr_etl.etl_atp_disclosure_tracking;
 
 -- create table etl_patient_demographics
 create table kenyaemr_etl.etl_patient_demographics (
@@ -4540,6 +4541,68 @@ CREATE TABLE kenyaemr_etl.etl_atp_transition_readiness_assessment
     INDEX (visit_date)
 );
 SELECT "Successfully created etl_atp_transition_readiness_assessment table";
+
+
+-- Create ATP Disclosure Tracking table 
+CREATE TABLE kenyaemr_etl.etl_atp_disclosure_tracking
+(
+    patient_id                                INT(11)  NOT NULL,
+    visit_id                                  INT(11) DEFAULT NULL,
+    encounter_id                              INT(11)  NOT NULL PRIMARY KEY,
+    uuid                                      CHAR(38) NOT NULL,
+    location_id                               INT(11)  NOT NULL,
+    provider                                  INT(11)  NOT NULL,
+    visit_date                                DATE,   
+    chilld_primary_caregiver                  INT(11),
+    other_primary_caregiver                       VARCHAR(255),
+    who_brought_child_clinic                      INT(11),
+    other_who_brought_child_clinic                VARCHAR(255),
+    clinic_report_child_knowsHave_Hiv            INT(11),
+    child_knows_have_hiv                          INT(11),
+    child_know_have_illness                       INT(11), 
+    child_response_why_take_medicaiton            INT(11),
+    other_child_response_why_take_medicaiton      VARCHAR(255),
+    who_brought_child_clinic_today                VARCHAR(255),
+    disclosure_counseling_done                    INT(11),
+    no_disclosure_counseling_done_why                    INT(11),
+    content_of_disclosure_counseling              VARCHAR(255),
+    other_why_no_disclosure_counseling_done                    INT(11),
+    place_full_dislosure_occured                  INT(11),
+    is_date_of_full_disclosure_known              INT(11),
+    date_of_full_disclosure                       DATE,
+    date_of_full_disclosure_not_known_specify     VARCHAR(255),
+    who_conducted_full_disclosure                 INT(11),
+    other_who_conducted_full_disclosure           VARCHAR(255),
+    nature_of_disclosure                          INT(11),
+    child_reactions_dislosure                     VARCHAR(255),
+    cadre                                         VARCHAR(255),
+    department                                    VARCHAR(255),
+    date_of_followup_visit                        DATE,
+    caregiver_reflection_behaviour        INT(11),
+    caregiver_reflection_mood             INT(11),
+    caregiver_reflection_adherence        INT(11),
+    caregiver_reflection_interaction_caregiver      INT(11),
+    provider_reflection_behaviour         INT(11),
+    provider_reflection_mood              INT(11),
+    provider_reflection_adherence         INT(11),
+    provider_reflection_interaction_caregiver       INT(11),
+    provider_reflection_interaction_provider       INT(11),
+    action_taken_at_visit VARCHAR(255),
+    action_plan_caregiver VARCHAR(255),
+    action_plan_child VARCHAR(255),
+    who_else_told_child_hiv_status VARCHAR(255),
+    date_created                      DATETIME NOT NULL,
+    date_last_modified                DATETIME,
+    CONSTRAINT FOREIGN KEY (patient_id)
+        REFERENCES kenyaemr_etl.etl_patient_demographics (patient_id),
+    CONSTRAINT unique_uuid UNIQUE (uuid),
+    INDEX (patient_id),
+    INDEX (visit_id),
+    INDEX (visit_date)
+);
+SELECT "Successfully created etl_atp_disclosure_tracking table";
+
+
 
 
 -- ------------ create table etl_ncd_followup-----------------------
