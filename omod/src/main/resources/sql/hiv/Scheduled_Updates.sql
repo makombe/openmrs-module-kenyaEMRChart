@@ -11265,6 +11265,25 @@ BEGIN
           when_child_be_disclosed_to,
           child_reactions_when_inform_status,
           questions_caregiver_have_about_hiv,
+           other_relative_who_brought_child_clinic,
+          other_non_relative_who_brought_child_clinic,
+          other_relative_lives_child_household,
+          other_non_relative_lives_child_household,
+          other_relative_gives_child_medication,
+          other_non_relative_gives_child_medication,
+          who_brings_child_clinic,
+          other_relative_who_brings_child_clinic,
+          other_non_relative_who_brings_child_clinic,
+          other_relative_knows_child_hiv_status,
+          other_non_relative_knows_child_hiv_status,
+          other_reason_child_taking_medicaiton,
+          other_reason_caregiver_thinks_reason_taking_medicaiton,
+          other_questions_child_asking,
+          other_care_giver_answer,
+          other_worries_learning_hiv_status,
+          other_when_child_be_disclosed_to,
+          cadre,
+          department,
            date_created,
            date_last_modified)
    select e.uuid,
@@ -11299,6 +11318,25 @@ BEGIN
            max(if(o.concept_id = 159642, o.value_coded, null))   as when_child_be_disclosed_to,
            max(if(o.concept_id = 161011, o.value_text, null))   as child_reactions_when_inform_status,
            max(if(o.concept_id = 162749, o.value_text, null))   as questions_caregiver_have_about_hiv,
+           max(if(o.concept_id = 164879, o.value_text, null))   as other_relative_who_brought_child_clinic,
+            max(if(o.concept_id = 165137, o.value_text, null))   as other_non_relative_who_brought_child_clinic,
+            max(if(o.concept_id = 165092, o.value_text, null))   as other_relative_lives_child_household,
+            max(if(o.concept_id = 162169, o.value_text, null))   as other_non_relative_lives_child_household,
+            max(if(o.concept_id = 165645, o.value_text, null))   as other_relative_gives_child_medication,
+            max(if(o.concept_id = 163042, o.value_text, null))   as other_non_relative_gives_child_medication,
+            max(if(o.concept_id = 165294, o.value_coded, null))   as who_brings_child_clinic,
+            max(if(o.concept_id = 160987, o.value_text, null))   as other_relative_who_brings_child_clinic,
+            max(if(o.concept_id = 163077, o.value_text, null))   as other_non_relative_who_brings_child_clinic,
+            max(if(o.concept_id = 163104, o.value_text, null))   as other_relative_knows_child_hiv_status,
+            max(if(o.concept_id = 163761, o.value_text, null))   as other_non_relative_knows_child_hiv_status,
+            max(if(o.concept_id = 163189, o.value_text, null))   as other_reason_child_taking_medicaiton,
+            max(if(o.concept_id = 164982, o.value_text, null))   as other_reason_caregiver_thinks_reason_taking_medicaiton,
+            max(if(o.concept_id = 165143, o.value_text, null))   as other_questions_child_asking,
+            max(if(o.concept_id = 165427, o.value_text, null))   as other_care_giver_answer,
+            max(if(o.concept_id = 164963, o.value_text, null))   as other_worries_learning_hiv_status,
+            max(if(o.concept_id = 145758, o.value_text, null))   as other_when_child_be_disclosed_to,
+            max(if(o.concept_id = 163258, o.value_text, null))   as cadre,
+            max(if(o.concept_id = 162724, o.value_text, null))   as department,
            e.date_created,
            e.date_changed
     from encounter e
@@ -11307,7 +11345,8 @@ BEGIN
              left outer join obs o on o.encounter_id = e.encounter_id and o.concept_id in                                               
                                 (2031464,160632,969,159892,166665,5303,159424,160119,1000606,160433,
                                 167681,2010482,168360,164991,166980,5606,166439,159928,165295,160618, 164995,
-                                159775,159642,161011,162749)
+                                159775,159642,161011,162749,164879,165137,165092,162169,165645,163042,165294,160987,163077,163104,163761,163189,
+                                164982,165143,165427,164963,145758,163258,162724)
         and o.voided = 0
     where e.voided = 0
     and e.date_created >= last_update_time
@@ -11342,7 +11381,26 @@ BEGIN
                             when_child_be_disclosed_to=VALUES(when_child_be_disclosed_to),
                             child_reactions_when_inform_status=VALUES(child_reactions_when_inform_status),
                             questions_caregiver_have_about_hiv=VALUES(questions_caregiver_have_about_hiv),
-                            
+                            other_relative_who_brought_child_clinic=VALUES(other_relative_who_brought_child_clinic),
+                            other_non_relative_who_brought_child_clinic=VALUES(other_non_relative_who_brought_child_clinic),
+                            other_relative_lives_child_household=VALUES(other_relative_lives_childhousehold),
+                            other_non_relative_lives_child_household=VALUES(other_non_relative_lives_child_household),
+                            other_relative_gives_child_medication=VALUES(other_relative_gives_child_medication),
+                            other_non_relative_gives_child_medication=VALUES(other_non_relative_gives_child_medication),
+                            who_brings_child_clinic=VALUES(who_brings_child_clinic),
+                            other_relative_who_brings_child_clinic=VALUES(other_relative_who_brings_child_clinic),
+                            other_non_relative_who_brings_child_clinic=VALUES(other_non_relative_who_brings_child_clinic),
+                            other_relative_knows_child_hiv_status=VALUES(other_relative_knows_child_hiv_status),
+                            other_non_relative_knows_child_hiv_status=VALUES(other_non_relative_knows_child_hiv_status),
+                            other_reason_child_taking_medicaiton=VALUES(other_reason_child_taking_medicaiton),
+                            other_reason_caregiver_thinks_reason_taking_medicaiton=VALUES(other_reason_caregiver_thinks_reason_taking_medicaiton),
+                            other_questions_child_asking=VALUES(other_questions_child_asking),
+                            other_care_giver_answer=VALUES(other_care_giver_answer),
+                            other_worries_learning_hiv_status=VALUES(other_worries_learning_hiv_status),
+                            other_when_child_be_disclosed_to=VALUES(other_when_child_be_disclosed_to),
+                            cadre=VALUES(cadre),
+                            department=VALUES(department),
+
      date_created=VALUES(date_created),
      date_last_modified=VALUES(date_last_modified);
     SELECT "Completed processing ATP Disclosure Readiness Assessment";
@@ -11370,6 +11428,16 @@ BEGIN
            communication,
            support,
            adult_clinic_expectations,
+           is_date_of_disclosure_known,
+          date_of_full_disclosure_not_known_specify,
+          point_of_entry_at_enrollment,
+          other_point_of_entry_at_enrollment,
+          treatment_literacy_discussed,
+          self_management_discussed,
+          communication_discussed,
+          support_discussed,
+          cadre,
+          department,
            date_created,
            date_last_modified)
    select e.uuid,
@@ -11384,7 +11452,18 @@ BEGIN
            max(if(o.concept_id = 166937, o.value_coded, null))     as self_management,
            max(if(o.concept_id = 165360, o.value_coded, null))   as communication,
            max(if(o.concept_id = 163766, o.value_coded, null))   as support,
-           max(if(o.concept_id = 165363, o.value_coded, null)) as adult_clinic_expectations,  
+           max(if(o.concept_id = 165363, o.value_coded, null)) as adult_clinic_expectations, 
+           
+           max(if(o.concept_id = 1000164, o.value_coded, null)) as is_date_of_disclosure_known, 
+           max(if(o.concept_id = 164433, o.value_text, null)) as date_of_full_disclosure_not_known_specify,
+            max(if(o.concept_id = 2031464, o.value_coded, null)) as point_of_entry_at_enrollment, 
+            max(if(o.concept_id = 160632, o.value_text, null)) as other_point_of_entry_at_enrollment, 
+            max(if(o.concept_id = 163042, o.value_text, null)) as treatment_literacy_discussed, 
+            max(if(o.concept_id = 163049, o.value_text, null)) as self_management_discussed, 
+            max(if(o.concept_id = 163164, o.value_text, null)) as communication_discussed, 
+            max(if(o.concept_id = 2031723, o.value_text, null)) as support_discussed,
+           max(if(o.concept_id = 163258, o.value_text, null)) as cadre, 
+           max(if(o.concept_id = 162724, o.value_text, null)) as department, 
            
            e.date_created,
            e.date_changed
@@ -11392,7 +11471,7 @@ BEGIN
              inner join person p on p.person_id = e.patient_id and p.voided = 0
              inner join form f on f.form_id = e.form_id and f.uuid = 'a4276b08-5bf1-402a-bb6a-0b2e54b41d67'
              left outer join obs o on o.encounter_id = e.encounter_id and o.concept_id in                                               
-                                (160753,165364,166937,165360,163766,165363)
+                                (160753,165364,166937,165360,163766,165363,1000164,164433,2031464,160632,163042,163049,163164,2031723,163258,162724)
         and o.voided = 0
     where e.voided = 0
     and e.date_created >= last_update_time
@@ -11409,6 +11488,16 @@ BEGIN
                             communication=VALUES(communication),
                             support=VALUES(support),
                             adult_clinic_expectations=VALUES(adult_clinic_expectations),
+                            is_date_of_disclosure_known=VALUES(is_date_of_disclosure_known),
+                            date_of_full_disclosure_not_known_specify=VALUES(date_of_full_disclosure_not_known_specify),
+                            point_of_entry_at_enrollment=VALUES(point_of_entry_at_enrollment),
+                            other_point_of_entry_at_enrollment=VALUES(other_point_of_entry_at_enrollment),
+                            treatment_literacy_discussed=VALUES(treatment_literacy_discussed),
+                            self_management_discussed=VALUES(self_management_discussed),
+                            communication_discussed=VALUES(communication_discussed),
+                            support_discussed=VALUES(support_discussed),
+                            cadre=VALUES(cadre),
+                            department=VALUES(department),
                                                 
      date_created=VALUES(date_created),
      date_last_modified=VALUES(date_last_modified);
@@ -11453,6 +11542,14 @@ BEGIN
            varbalize_long_term_goals,
            ready_to_transition_adult_care,
            not_ready_for_transition_specify,
+           is_date_of_disclosure_known,
+          date_of_disclosure,
+          date_of_full_disclosure_not_known_specify,
+          point_of_entry_at_enrollment,
+          other_point_of_entry_at_enrollment,
+          ylh_having_sex,
+          cadre,
+          department,
            date_created,
            date_last_modified)
     select e.uuid,
@@ -11486,6 +11583,14 @@ BEGIN
            max(if(o.concept_id = 162060, o.value_coded, null)) as varbalize_long_term_goals, 
            max(if(o.concept_id = 165363, o.value_coded, null)) as ready_to_transition_adult_care, 
            max(if(o.concept_id = 160632, o.value_text, null)) as not_ready_for_transition_specify, 
+           max(if(o.concept_id = 1000164, o.value_coded, null)) as is_date_of_disclosure_known, 
+           max(if(o.concept_id = 160753, o.value_datetime, null)) as date_of_disclosure, 
+           max(if(o.concept_id = 164433, o.value_text, null)) as date_of_full_disclosure_not_known_specify,
+           max(if(o.concept_id = 2031464, o.value_coded, null)) as point_of_entry_at_enrollment, 
+           max(if(o.concept_id = 161011, o.value_text, null)) as other_point_of_entry_at_enrollment, 
+           max(if(o.concept_id = 160579, o.value_coded, null)) as ylh_having_sex,
+           max(if(o.concept_id = 163258, o.value_coded, null)) as cadre,
+           max(if(o.concept_id = 162724, o.value_coded, null))   as department,
            e.date_created,
            e.date_changed
     from encounter e
@@ -11494,7 +11599,7 @@ BEGIN
              left outer join obs o on o.encounter_id = e.encounter_id and o.concept_id in                                               
                                 (1436,162695,1149,165244,163310,165245,160288,166484,160582,
                                 162886,165315,162062,159395,162871,5619,160575,1635,2010457,163000,
-                                159425,166665,162060,165363,160632)
+                                159425,166665,162060,165363,160632,1000164,160753,164433,2031464,161011,160579,163258,162724)
         and o.voided = 0
     where e.voided = 0
     and e.date_created >= last_update_time
@@ -11528,7 +11633,16 @@ BEGIN
                             identify_treatment_buddy=VALUES(identify_treatment_buddy),
                             varbalize_long_term_goals=VALUES(varbalize_long_term_goals),
                             ready_to_transition_adult_care=VALUES(ready_to_transition_adult_care),
-                            not_ready_for_transition_specify=VALUES(not_ready_for_transition_specify),                           
+                            not_ready_for_transition_specify=VALUES(not_ready_for_transition_specify), 
+                            is_date_of_disclosure_known=VALUES(is_date_of_disclosure_known),
+                            date_of_disclosure=VALUES(date_of_disclosure),
+                            date_of_full_disclosure_not_known_specify=VALUES(date_of_full_disclosure_not_known_specify),
+                            point_of_entry_at_enrollment=VALUES(point_of_entry_at_enrollment),
+                            other_point_of_entry_at_enrollment=VALUES(other_point_of_entry_at_enrollment),
+                            ylh_having_sex=VALUES(ylh_having_sex),
+                            cadre=VALUES(cadre),
+                            department=VALUES(department),
+
      date_created=VALUES(date_created),
      date_last_modified=VALUES(date_last_modified);
     SELECT "Completed processing ATP Transition readiness assessment";
