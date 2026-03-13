@@ -10418,7 +10418,6 @@ BEGIN
         when_child_be_disclosed_to,
         child_reactions_when_inform_status,
         questions_caregiver_have_about_hiv,
-        
         other_relative_who_brought_child_clinic,
         other_non_relative_who_brought_child_clinic,
         other_relative_lives_child_household,
@@ -10438,7 +10437,6 @@ BEGIN
         other_when_child_be_disclosed_to,
         cadre,
         department,
-
         date_created,
         date_last_modified)
     select e.uuid,
@@ -10448,51 +10446,114 @@ BEGIN
            date(e.encounter_datetime)                                            as visit_date,
            e.location_id,
            e.encounter_id,
-           max(if(o.concept_id = 2031464, o.value_coded, null))                   as entry_point_at_enrolment,
+           max(if(o.concept_id = 2031464, (case o.value_coded when 1000061 then "Pediatric clinic" when 2016041 then "Adolescent clinic" when 5622 then "Other" else "" end), null))  as entry_point_at_enrolment,
            max(if(o.concept_id = 160632, o.value_text, null))                as other_entry_point_specify,
-           max(if(o.concept_id = 969, o.value_coded, null))     as who_brought_child_clinic,
-           max(if(o.concept_id = 159892, o.value_coded, null))   as who_else_lives_child_household,
-           max(if(o.concept_id = 166665, o.value_coded, null))   as gives_child_medication,
-           max(if(o.concept_id = 5303, o.value_coded, null)) as knows_child_hiv_status,
-           max(if(o.concept_id = 159424, o.value_coded, null))   as other_house_member_has_hiv,
-           max(if(o.concept_id = 160119, o.value_coded, null))     as family_member_taking_arvs,
-           max(if(o.concept_id = 1000606, o.value_coded, null))   as  discussed_informing_child_hiv_status,
-           max(if(o.concept_id = 160433, o.value_coded, null))     as  discussion_outcome ,
-           max(if(o.concept_id = 167681, o.value_coded, null))   as  child_told_why_come_clinic_or_medication,
-           max(if(o.concept_id = 2010482, o.value_coded, null))   as questions_child_asking,
-           max(if(o.concept_id = 168360, o.value_coded, null))   as care_giver_answer,
-           max(if(o.concept_id = 164991, o.value_coded, null))   as child_ever_talk_about_hiv,
-           max(if(o.concept_id = 166980, o.value_coded, null))   as what_does_child_say,
-           max(if(o.concept_id = 5606, o.value_coded, null))   as child_doing_in_school,
-           max(if(o.concept_id = 166439, o.value_coded, null))   as child_school_performance,
-           max(if(o.concept_id = 159928, o.value_coded, null))   as child_like_school,
-           max(if(o.concept_id = 165295, o.value_coded, null))   as child_have_friends,
+           max(if(o.concept_id = 969, (case o.value_coded 
+           when 970 then "Mother" 
+           when 971 then "Father" 
+           when 972 then "Sibling" 
+           when 973 then "Grandparent" 
+           when 1582 then "Other non-relative" 
+           when 975 then "Aunt/Uncle" 
+           when 976 then "Grandparent" 
+           when 978 then "Self (Came alone)" 
+           when 5620 then "Other Relative" 
+           else "" end), null))     as who_brought_child_clinic,
+            concat_ws(',', max(if(o.concept_id = 159892 and o.value_coded = 970, 'Mother', null)), 
+                     max(if(o.concept_id = 159892 and o.value_coded = 971, 'Father', null)),
+                     max(if(o.concept_id = 159892 and o.value_coded = 972, 'Sibling', null)),
+                     max(if(o.concept_id = 159892 and o.value_coded = 973, 'Grandparent', null)),
+                     max(if(o.concept_id = 159892 and o.value_coded = 1582, 'Other non-relative', null)),
+                     max(if(o.concept_id = 159892 and o.value_coded = 975, 'Aunt/Uncle', null)),
+                     max(if(o.concept_id = 159892 and o.value_coded = 976, 'Grandparent', null)),
+                     max(if(o.concept_id = 159892 and o.value_coded = 5620, 'Other Relative', null)))   as who_else_lives_child_household,
+            concat_ws(',', max(if(o.concept_id = 166665 and o.value_coded = 970, 'Mother', null)), 
+                     max(if(o.concept_id = 166665 and o.value_coded = 971, 'Father', null)),
+                     max(if(o.concept_id = 166665 and o.value_coded = 972, 'Sibling', null)),
+                     max(if(o.concept_id = 166665 and o.value_coded = 973, 'Grandparent', null)),
+                     max(if(o.concept_id = 166665 and o.value_coded = 978, 'Self', null)),
+                     max(if(o.concept_id = 166665 and o.value_coded = 1582, 'Other non-relative', null)),
+                     max(if(o.concept_id = 166665 and o.value_coded = 975, 'Aunt/Uncle', null)),
+                     max(if(o.concept_id = 166665 and o.value_coded = 976, 'Grandparent', null)),
+                     max(if(o.concept_id = 166665 and o.value_coded = 5620, 'Other Relative', null)))   as gives_child_medication,
+             concat_ws(',', max(if(o.concept_id = 5303 and o.value_coded = 970, 'Mother', null)), 
+                     max(if(o.concept_id = 5303 and o.value_coded = 971, 'Father', null)),
+                     max(if(o.concept_id = 5303 and o.value_coded = 972, 'Sibling', null)),
+                     max(if(o.concept_id = 5303 and o.value_coded = 973, 'Grandparent', null)),
+                     max(if(o.concept_id = 5303 and o.value_coded = 978, 'Self', null)),
+                     max(if(o.concept_id = 5303 and o.value_coded = 1582, 'Other non-relative', null)),
+                     max(if(o.concept_id = 5303 and o.value_coded = 975, 'Aunt/Uncle', null)),
+                     max(if(o.concept_id = 5303 and o.value_coded = 976, 'Grandparent', null)),
+                     max(if(o.concept_id = 5303 and o.value_coded = 5620, 'Other Relative', null)))   as knows_child_hiv_status,         
+           max(if(o.concept_id = 159424,(case o.value_coded when 1065 then "Yes" when 1066 then "No" else "" end), null))   as other_house_member_has_hiv,
+           max(if(o.concept_id = 160119,(case o.value_coded when 1065 then "Yes" when 1066 then "No" else "" end), null))     as family_member_taking_arvs,
+           max(if(o.concept_id = 1000606,(case o.value_coded when 1065 then "Yes" when 1066 then "No" else "" end), null))   as  discussed_informing_child_hiv_status,
+           max(if(o.concept_id = 160433, (case o.value_coded when 1065 then "Child should be told now" when 1066 then "Child should be told later" else "" end), null))     as  discussion_outcome ,
+            concat_ws(',', max(if(o.concept_id = 167681 and o.value_coded = 137793, 'They have illness', null)), 
+                     max(if(o.concept_id = 167681 and o.value_coded = 2031737, 'To remain strong', null)),
+                     max(if(o.concept_id = 167681 and o.value_coded = 163560, 'To prevent illness', null)),
+                     max(if(o.concept_id = 167681 and o.value_coded = 5622, 'Other', null)))   as child_told_why_come_clinic_or_medication,
+            concat_ws(',', max(if(o.concept_id = 2010482 and o.value_coded = 137793, 'Why they take medicine', null)), 
+                     max(if(o.concept_id = 2010482 and o.value_coded = 2031737, 'When they will stop medicine', null)),
+                     max(if(o.concept_id = 2010482 and o.value_coded = 163560, 'Why others not taking medicine', null)),
+                     max(if(o.concept_id = 2010482 and o.value_coded = 5622, 'Other', null)))   as questions_child_asking,
+             concat_ws(',', max(if(o.concept_id = 168360 and o.value_coded = 137793, 'They have illness', null)), 
+                     max(if(o.concept_id = 168360 and o.value_coded = 2031737, 'To remain strong', null)),
+                     max(if(o.concept_id = 168360 and o.value_coded = 163560, 'To prevent illness', null)),
+                     max(if(o.concept_id = 168360 and o.value_coded = 5622, 'Other', null)))   as care_giver_answer,
+           max(if(o.concept_id = 164991, (case o.value_coded when 1065 then "Yes" when 1066 then "No" else "" end), null))   as child_ever_talk_about_hiv,
+           concat_ws(',', max(if(o.concept_id = 166980 and o.value_coded = 1065, 'HIV can be treated', null)), 
+                     max(if(o.concept_id = 166980 and o.value_coded = 1066, 'People with HIV can live normal', null)),
+                     max(if(o.concept_id = 166980 and o.value_coded = 1067, 'HIV kills', null)),
+                     max(if(o.concept_id = 166980 and o.value_coded = 5622, 'Other', null)))   as what_does_child_say,
+            max(if(o.concept_id = 5606, (case o.value_coded when 1065 then "Coping well" when 1066 then "Not coping well" else "" end), null))   as child_doing_in_school,
+            max(if(o.concept_id = 166439, (case o.value_coded when 2022905 then "Above average" when 160487 then "Average" when 2022907 then "Below average" else "" end), null))   as child_school_performance,
+            max(if(o.concept_id = 159928,(case o.value_coded when 1065 then "Yes" when 1066 then "No" else "" end), null))     as child_like_school,
+            max(if(o.concept_id = 165295,(case o.value_coded when 1065 then "Yes" when 1066 then "No" else "" end), null))     as child_have_friends,
            max(if(o.concept_id = 160618, o.value_text, null))   as child_behaviour_home,
-           max(if(o.concept_id = 164995, o.value_coded, null))   as worries_learning_hiv_status,
-           max(if(o.concept_id = 159775, o.value_coded, null))   as disclosure_preference,
-           max(if(o.concept_id = 159642, o.value_coded, null))   as when_child_be_disclosed_to,
+          concat_ws(',', max(if(o.concept_id = 164995 and o.value_coded = 1065, 'Child will not cope well', null)), 
+                     max(if(o.concept_id = 164995 and o.value_coded = 163475, 'Child will blame parent ', null)),
+                     max(if(o.concept_id = 164995 and o.value_coded = 5622, 'Other', null)))   as worries_learning_hiv_status,
+         max(if(o.concept_id = 159775,(case o.value_coded when 2010458 then "By the caregiver" 
+         when 5620 then "By the caregiver with another family member" 
+         when 164944 then "By the caregiver with the HCW"
+         when 166443 then "By HCW with caregiver"
+         else "" end), null))     as disclosure_preference,
+         max(if(o.concept_id = 159642,(case o.value_coded when 160131 then "Today" 
+         when 2031621 then "In 3 mo" 
+         when 1000515 then "In 6 mo"
+         when 167016 then "In 12 mo"
+         when 5622 then "Other"
+         else "" end), null))     as when_child_be_disclosed_to,
            max(if(o.concept_id = 161011, o.value_text, null))   as child_reactions_when_inform_status,
            max(if(o.concept_id = 162749, o.value_text, null))   as questions_caregiver_have_about_hiv,       
-            max(if(o.concept_id = 164879, o.value_text, null))   as other_relative_who_brought_child_clinic,
-            max(if(o.concept_id = 165137, o.value_text, null))   as other_non_relative_who_brought_child_clinic,
-            max(if(o.concept_id = 165092, o.value_text, null))   as other_relative_lives_child_household,
-            max(if(o.concept_id = 162169, o.value_text, null))   as other_non_relative_lives_child_household,
-            max(if(o.concept_id = 165645, o.value_text, null))   as other_relative_gives_child_medication,
-            max(if(o.concept_id = 163042, o.value_text, null))   as other_non_relative_gives_child_medication,
-            max(if(o.concept_id = 165294, o.value_coded, null))   as who_brings_child_clinic,
-            max(if(o.concept_id = 160987, o.value_text, null))   as other_relative_who_brings_child_clinic,
-            max(if(o.concept_id = 163077, o.value_text, null))   as other_non_relative_who_brings_child_clinic,
-            max(if(o.concept_id = 163104, o.value_text, null))   as other_relative_knows_child_hiv_status,
-            max(if(o.concept_id = 163761, o.value_text, null))   as other_non_relative_knows_child_hiv_status,
-            max(if(o.concept_id = 163189, o.value_text, null))   as other_reason_child_taking_medicaiton,
-            max(if(o.concept_id = 164982, o.value_text, null))   as other_reason_caregiver_thinks_reason_taking_medicaiton,
-            max(if(o.concept_id = 165143, o.value_text, null))   as other_questions_child_asking,
-            max(if(o.concept_id = 165427, o.value_text, null))   as other_care_giver_answer,
-            max(if(o.concept_id = 164963, o.value_text, null))   as other_worries_learning_hiv_status,
-            max(if(o.concept_id = 145758, o.value_text, null))   as other_when_child_be_disclosed_to,
-            max(if(o.concept_id = 163258, o.value_text, null))   as cadre,
-            max(if(o.concept_id = 162724, o.value_text, null))   as department,
-
+           max(if(o.concept_id = 164879, o.value_text, null))   as other_relative_who_brought_child_clinic,
+           max(if(o.concept_id = 165137, o.value_text, null))   as other_non_relative_who_brought_child_clinic,
+           max(if(o.concept_id = 165092, o.value_text, null))   as other_relative_lives_child_household,
+           max(if(o.concept_id = 162169, o.value_text, null))   as other_non_relative_lives_child_household,
+           max(if(o.concept_id = 165645, o.value_text, null))   as other_relative_gives_child_medication,
+           max(if(o.concept_id = 163042, o.value_text, null))   as other_non_relative_gives_child_medication,
+           concat_ws(',', max(if(o.concept_id = 165294 and o.value_coded = 970, 'Mother', null)), 
+                     max(if(o.concept_id = 165294 and o.value_coded = 971, 'Father', null)),
+                     max(if(o.concept_id = 165294 and o.value_coded = 972, 'Sibling', null)),
+                     max(if(o.concept_id = 165294 and o.value_coded = 973, 'Grandparent', null)),
+                     max(if(o.concept_id = 165294 and o.value_coded = 1582, 'Other non-relative', null)),
+                     max(if(o.concept_id = 165294 and o.value_coded = 975, 'Aunt/Uncle', null)),
+                     max(if(o.concept_id = 165294 and o.value_coded = 978, 'Self(came alone)', null)),
+                     max(if(o.concept_id = 165294 and o.value_coded = 976, 'Grandparent', null)),
+                     max(if(o.concept_id = 165294 and o.value_coded = 5620, 'Other Relative', null)))   as who_brings_child_clinic,
+           max(if(o.concept_id = 160987, o.value_text, null))   as other_relative_who_brings_child_clinic,
+           max(if(o.concept_id = 163077, o.value_text, null))   as other_non_relative_who_brings_child_clinic,
+           max(if(o.concept_id = 163104, o.value_text, null))   as other_relative_knows_child_hiv_status,
+           max(if(o.concept_id = 163761, o.value_text, null))   as other_non_relative_knows_child_hiv_status,
+           max(if(o.concept_id = 163189, o.value_text, null))   as other_reason_child_taking_medicaiton,
+           max(if(o.concept_id = 164982, o.value_text, null))   as other_reason_caregiver_thinks_reason_taking_medicaiton,
+           max(if(o.concept_id = 165143, o.value_text, null))   as other_questions_child_asking,
+           max(if(o.concept_id = 165427, o.value_text, null))   as other_care_giver_answer,
+           max(if(o.concept_id = 164963, o.value_text, null))   as other_worries_learning_hiv_status,
+           max(if(o.concept_id = 145758, o.value_text, null))   as other_when_child_be_disclosed_to,
+           max(if(o.concept_id = 163258, o.value_text, null))   as cadre,
+           max(if(o.concept_id = 162724, o.value_text, null))   as department,
            e.date_created,
            e.date_changed
     from encounter e
@@ -10549,14 +10610,29 @@ BEGIN
            e.location_id,
            e.encounter_id,
            max(if(o.concept_id = 160753, o.value_datetime, null))                   as date_of_full_disclosure,
-           max(if(o.concept_id = 165364, o.value_coded, null))                as treatment_literacy,
-           max(if(o.concept_id = 166937, o.value_coded, null))     as self_management,
-           max(if(o.concept_id = 165360, o.value_coded, null))   as communication,
-           max(if(o.concept_id = 163766, o.value_coded, null))   as support,
-           max(if(o.concept_id = 165363, o.value_coded, null)) as adult_clinic_expectations, 
-           max(if(o.concept_id = 1000164, o.value_coded, null)) as is_date_of_disclosure_known, 
+           concat_ws(',', max(if(o.concept_id = 165364 and o.value_coded = 1065, 'Discussed', null)), 
+                     max(if(o.concept_id = 165364 and o.value_coded = 2016556, 'Mastered', null)),
+                     max(if(o.concept_id = 165364 and o.value_coded = 1066, 'Not Discussed', null)))   as treatment_literacy,
+           concat_ws(',', max(if(o.concept_id = 166937 and o.value_coded = 1065, 'Discussed', null)), 
+                     max(if(o.concept_id = 166937 and o.value_coded = 2016556, 'Mastered', null)),
+                     max(if(o.concept_id = 166937 and o.value_coded = 1066, 'Not Discussed', null)))   as self_management,
+           concat_ws(',', max(if(o.concept_id = 165360 and o.value_coded = 1065, 'Discussed', null)), 
+                     max(if(o.concept_id = 165360 and o.value_coded = 2016556, 'Mastered', null)),
+                     max(if(o.concept_id = 165360 and o.value_coded = 1066, 'Not Discussed', null)))   as communication,
+           concat_ws(',', max(if(o.concept_id = 163766 and o.value_coded = 1065, 'Discussed', null)), 
+                     max(if(o.concept_id = 163766 and o.value_coded = 2016556, 'Mastered', null)),
+                     max(if(o.concept_id = 163766 and o.value_coded = 1066, 'Not Discussed', null)))   as support,
+           concat_ws(',', max(if(o.concept_id = 165363 and o.value_coded = 1065, 'Discussed', null)), 
+                     max(if(o.concept_id = 165363 and o.value_coded = 2016556, 'Mastered', null)),
+                     max(if(o.concept_id = 165363 and o.value_coded = 1066, 'Not Discussed', null)))   as adult_clinic_expectations, 
+           max(if(o.concept_id = 1000164, (case o.value_coded when 1065 then "Yes" when 1066 then "No" else "" end), null)) as is_date_of_disclosure_known, 
            max(if(o.concept_id = 164433, o.value_text, null)) as date_of_full_disclosure_not_known_specify,
-            max(if(o.concept_id = 2031464, o.value_coded, null)) as point_of_entry_at_enrollment, 
+           max(if(o.concept_id = 2031464, (case o.value_coded 
+           when 1000061 then "Pediatric clinic"
+           when 2016041 then "Adolescent clinic"
+           when 1000045 then "CCC"
+           when 160538 then "PMTCT" 
+           when 5622 then "Other" else "" end), null)) as point_of_entry_at_enrollment, 
             max(if(o.concept_id = 160632, o.value_text, null)) as other_point_of_entry_at_enrollment, 
             max(if(o.concept_id = 163042, o.value_text, null)) as treatment_literacy_discussed, 
             max(if(o.concept_id = 163049, o.value_text, null)) as self_management_discussed, 
@@ -10631,41 +10707,46 @@ BEGIN
            e.creator,
            e.patient_id,
            e.visit_id,
-           date(e.encounter_datetime)                                            as visit_date,
+           date(e.encounter_datetime) as visit_date,
            e.location_id,
            e.encounter_id,
-           max(if(o.concept_id = 1436, o.value_coded, null))      as can_explain_hiv_is,
-           max(if(o.concept_id = 162695, o.value_coded, null))      as explain_how_arv_work,
-           max(if(o.concept_id = 1149, o.value_coded, null))     as knows_name_of_arv,
-           max(if(o.concept_id = 165244, o.value_coded, null))   as explain_what_means_suppressed_vl,
-           max(if(o.concept_id = 163310, o.value_coded, null))   as state_what_thier_vl_is,
-           max(if(o.concept_id = 165245, o.value_coded, null)) as knows_they_virally_suppressed, 
-           max(if(o.concept_id = 160288, o.value_coded, null)) as know_day_date_of_current_clinic_visit, 
-           max(if(o.concept_id = 166484, o.value_coded, null)) as came_on_scheduled, 
-           max(if(o.concept_id = 160582, o.value_coded, null)) as explain_what_to_do_missed_medication, 
-           max(if(o.concept_id = 162886, o.value_coded, null)) as explain_where_to_seek_medical_care, 
-           max(if(o.concept_id = 165315, o.value_coded, null)) as navigate_clinic_services_on_own, 
-           max(if(o.concept_id = 162062, o.value_coded, null)) as comfortable_comming_to_clinic, 
+           max(if(o.concept_id = 1436, (case o.value_coded when 1065 then "Yes" when 1066 then "No" when 168280 then "Partially" else "" end), null))      as can_explain_hiv_is,
+           max(if(o.concept_id = 162695,(case o.value_coded when 1065 then "Yes" when 1066 then "No" when 168280 then "Partially" else "" end), null))      as explain_how_arv_work,
+           max(if(o.concept_id = 1149, (case o.value_coded when 1065 then "Yes" when 1066 then "No" when 168280 then "Partially" else "" end), null))     as knows_name_of_arv,
+           max(if(o.concept_id = 165244, (case o.value_coded when 1065 then "Yes" when 1066 then "No" when 168280 then "Partially" else "" end), null))   as explain_what_means_suppressed_vl,
+           max(if(o.concept_id = 163310, (case o.value_coded when 1065 then "Yes" when 1066 then "No" when 168280 then "Partially" else "" end), null))   as state_what_thier_vl_is,
+           max(if(o.concept_id = 165245, (case o.value_coded when 1065 then "Yes" when 1066 then "No" when 168280 then "Partially" else "" end), null)) as knows_they_virally_suppressed, 
+           max(if(o.concept_id = 160288, (case o.value_coded when 1065 then "Yes" when 1066 then "No" when 168280 then "Partially" else "" end), null)) as know_day_date_of_current_clinic_visit, 
+           max(if(o.concept_id = 166484, (case o.value_coded when 1065 then "Yes" when 1066 then "No" when 168280 then "Partially" else "" end), null)) as came_on_scheduled, 
+           max(if(o.concept_id = 160582, (case o.value_coded when 1065 then "Yes" when 1066 then "No" when 168280 then "Partially" else "" end), null)) as explain_what_to_do_missed_medication, 
+           max(if(o.concept_id = 162886, (case o.value_coded when 1065 then "Yes" when 1066 then "No" when 168280 then "Partially" else "" end), null)) as explain_where_to_seek_medical_care, 
+           max(if(o.concept_id = 165315, (case o.value_coded when 1065 then "Yes" when 1066 then "No" when 168280 then "Partially" else "" end), null)) as navigate_clinic_services_on_own, 
+           max(if(o.concept_id = 162062, (case o.value_coded when 1065 then "Yes" when 1066 then "No" when 168280 then "Partially" else "" end), null)) as comfortable_comming_to_clinic, 
            max(if(o.concept_id = 159395, o.value_text, null)) as feels_not_conmfortable_coming_to_clinic_specify, 
-           max(if(o.concept_id = 162871, o.value_coded, null)) as medical_problem_report_symptoms, 
-           max(if(o.concept_id = 5619, o.value_coded, null)) as feel_free_ask_hcw_questions, 
-           max(if(o.concept_id = 160575, o.value_coded, null)) as feel_free_ask_hcw_reproductive_health, 
-           max(if(o.concept_id = 1635, o.value_coded, null)) as name_different_contraception, 
-           max(if(o.concept_id = 2010457, o.value_coded, null)) as identify_one_person_to_seek_help, 
-           max(if(o.concept_id = 163000, o.value_coded, null)) as attends_peer_support_group, 
-           max(if(o.concept_id = 159425, o.value_coded, null)) as disclose_hiv_status_someone_else, 
-           max(if(o.concept_id = 166665, o.value_coded, null)) as identify_treatment_buddy, 
-           max(if(o.concept_id = 162060, o.value_coded, null)) as varbalize_long_term_goals, 
-           max(if(o.concept_id = 165363, o.value_coded, null)) as ready_to_transition_adult_care, 
+           max(if(o.concept_id = 162871, (case o.value_coded when 1065 then "Yes" when 1066 then "No" when 168280 then "Partially" else "" end), null)) as medical_problem_report_symptoms, 
+           max(if(o.concept_id = 5619, (case o.value_coded when 1065 then "Yes" when 1066 then "No" when 168280 then "Partially" else "" end), null)) as feel_free_ask_hcw_questions, 
+           max(if(o.concept_id = 160575, (case o.value_coded when 1065 then "Yes" when 1066 then "No" when 168280 then "Partially" else "" end), null)) as feel_free_ask_hcw_reproductive_health, 
+           max(if(o.concept_id = 1635, (case o.value_coded when 1065 then "Yes" when 1066 then "No" when 168280 then "Partially" else "" end), null)) as name_different_contraception, 
+           max(if(o.concept_id = 2010457, (case o.value_coded when 1065 then "Yes" when 1066 then "No" when 168280 then "Partially" else "" end), null)) as identify_one_person_to_seek_help, 
+           max(if(o.concept_id = 163000, (case o.value_coded when 1065 then "Yes" when 1066 then "No" when 168280 then "Partially" else "" end), null)) as attends_peer_support_group, 
+           max(if(o.concept_id = 159425, (case o.value_coded when 1065 then "Yes" when 1066 then "No" when 168280 then "Partially" else "" end), null)) as disclose_hiv_status_someone_else, 
+           max(if(o.concept_id = 166665, (case o.value_coded when 1065 then "Yes" when 1066 then "No" when 168280 then "Partially" else "" end), null)) as identify_treatment_buddy, 
+           max(if(o.concept_id = 162060, (case o.value_coded when 1065 then "Yes" when 1066 then "No" when 168280 then "Partially" else "" end), null)) as varbalize_long_term_goals, 
+           max(if(o.concept_id = 165363, (case o.value_coded when 1065 then "Yes" when 1066 then "No" when 168280 then "Partially" else "" end), null)) as ready_to_transition_adult_care, 
            max(if(o.concept_id = 160632, o.value_text, null)) as not_ready_for_transition_specify,        
-           max(if(o.concept_id = 1000164, o.value_coded, null)) as is_date_of_disclosure_known, 
+           max(if(o.concept_id = 1000164, (case o.value_coded when 1065 then "Yes" when 1066 then "No" when 168280 then "Partially" else "" end), null)) as is_date_of_disclosure_known, 
            max(if(o.concept_id = 160753, o.value_datetime, null)) as date_of_disclosure, 
            max(if(o.concept_id = 164433, o.value_text, null)) as date_of_full_disclosure_not_known_specify,
-           max(if(o.concept_id = 2031464, o.value_coded, null)) as point_of_entry_at_enrollment, 
+           max(if(o.concept_id = 2031464, (case o.value_coded 
+           when 1000061 then "Pediatric clinic"
+           when 2016041 then "Adolescent clinic"
+           when 1000045 then "CCC"
+           when 160538 then "PMTCT" 
+           when 5622 then "Other" else "" end), null)) as point_of_entry_at_enrollment,
            max(if(o.concept_id = 161011, o.value_text, null)) as other_point_of_entry_at_enrollment, 
-           max(if(o.concept_id = 160579, o.value_coded, null)) as ylh_having_sex,
-           max(if(o.concept_id = 163258, o.value_coded, null)) as cadre,
-           max(if(o.concept_id = 162724, o.value_coded, null))   as department,
+           max(if(o.concept_id = 160579, (case o.value_coded when 1065 then "Yes" when 1066 then "No" when 168280 then "Partially" else "" end), null)) as ylh_having_sex,
+           max(if(o.concept_id = 163258, o.value_text, null)) as cadre,
+           max(if(o.concept_id = 162724, o.value_text, null))   as department,
            e.date_created,
            e.date_changed
     from encounter e
@@ -10682,120 +10763,378 @@ BEGIN
 END $$
 
 
--- Procedure sp_populate_etl__atp_disclosure_tracking
+-- -- Procedure sp_populate_etl__atp_disclosure_tracking
+-- DROP PROCEDURE IF EXISTS sp_populate_etl_atp_disclosure_tracking $$
+-- CREATE PROCEDURE sp_populate_etl_atp_disclosure_tracking()
+-- BEGIN
+--     SELECT "Processing ATP Disclosure Tracking ";
+--     INSERT INTO kenyaemr_etl.etl_atp_disclosure_tracking (
+--         uuid,
+--         provider,
+--         patient_id,
+--         visit_id,
+--         visit_date,
+--         location_id,
+--         encounter_id,
+--         chilld_primary_caregiver,
+--         other_primary_caregiver,
+--         who_brought_child_clinic,
+--         other_who_brought_child_clinic,
+--         clinic_report_child_knowsHave_Hiv,
+--         child_knows_have_hiv,
+--         child_know_have_illness,
+--         child_response_why_take_medicaiton,
+--         other_child_response_why_take_medicaiton,
+--         who_brought_child_clinic_today,
+--         disclosure_counseling_done,
+--         no_disclosure_counseling_done_why,
+--         content_of_disclosure_counseling,
+--         other_why_no_disclosure_counseling_done,
+--         place_full_dislosure_occured,
+--         is_date_of_full_disclosure_known,
+--         date_of_full_disclosure,
+--         date_of_full_disclosure_not_known_specify,
+--         who_conducted_full_disclosure,
+--         other_who_conducted_full_disclosure,
+--         nature_of_disclosure,
+--         child_reactions_dislosure,
+--         cadre,
+--         department,
+--         date_of_followup_visit,
+--         caregiver_reflection_behaviour,
+--         caregiver_reflection_mood,
+--         caregiver_reflection_adherence,
+--         caregiver_reflection_interaction_caregiver,
+--         provider_reflection_behaviour,
+--         provider_reflection_mood,
+--         provider_reflection_adherence,
+--         provider_reflection_interaction_caregiver,
+--         provider_reflection_interaction_provider,
+--         action_taken_at_visit,
+--         action_plan_caregiver,
+--         action_plan_child,
+--         who_else_told_child_hiv_status,
+--         date_created,
+--         date_last_modified)
+--     select e.uuid,
+--            e.creator,
+--            e.patient_id,
+--            e.visit_id,
+--            date(e.encounter_datetime)                                            as visit_date,
+--            e.location_id,
+--            e.encounter_id,
+--            max(if(o.concept_id = 2010456, (case o.value_coded 
+--            when 970 then "Biological mother" 
+--            when 971 then "Biological father" 
+--            when 972 then "Sibling of child" 
+--            when 973 then "Grandmother" 
+--            when 975 then "Aunt/Uncle" 
+--            when 5620 then "Other" 
+--            else "" end), null))     as chilld_primary_caregiver,
+--            max(if(o.concept_id = 161011, o.value_text, null))      as other_primary_caregiver,
+--            max(if(o.concept_id = 969, (case o.value_coded 
+--            when 1527 then "Parent" 
+--            when 978 then "Came alone" 
+--            when 972 then "Sibling of child" 
+--            when 973 then "Grandparent" 
+--            when 975 then "Aunt/Uncle" 
+--            when 5620 then "Other" 
+--            else "" end), null))     as who_brought_child_clinic,
+--            max(if(o.concept_id = 164879, o.value_text, null))   as other_who_brought_child_clinic,
+--            max(if(o.concept_id = 1000164, (case o.value_coded when 1065 then "Yes" when 1066 then "No" else "" end), null))   as clinic_report_child_knowsHave_Hiv,
+--            max(if(o.concept_id = 5303, (case o.value_coded when 1065 then "Yes, they understand well" when 163720 then "Yes, but will review booklet" when 1066 then "No" else "" end), null)) as child_knows_have_hiv, 
+--            max(if(o.concept_id = 2031957, (case o.value_coded when 1065 then "Yes" when 1066 then "No" else "" end), null)) as child_know_have_illness, 
+--            max(if(o.concept_id = 160119, (case o.value_coded 
+--            when 1066 then "Don’t know" 
+--            when 137793 then "Mentions specific illness not HIV" 
+--            when 123676 then "Mentions immunity (make body strong, prevent illness)" 
+--            when 138571 then "I have HIV" 
+--            when 5622 then "Other" 
+--            else "" end), null))     as child_response_why_take_medicaiton,
+--            max(if(o.concept_id = 2032077, o.value_text, null)) as other_child_response_why_take_medicaiton, 
+--            max(if(o.concept_id = 2031918, o.value_text, null)) as who_brought_child_clinic_today, 
+--            max(if(o.concept_id = 165070, (case o.value_coded when 1065 then "Yes" when 1066 then "No" else "" end), null)) as disclosure_counseling_done, 
+--            max(if(o.concept_id = 164995, (case o.value_coded 
+--            when 163293 then "Child too sick" 
+--            when 163524 then "Already disclosed" 
+--            when 1118 then "Not ready" 
+--            when 160101 then "Short visit" 
+--            when 5622 then "Other" 
+--            else "" end), null))     as no_disclosure_counseling_done_why,
+--            max(if(o.concept_id = 164992, o.value_text, null)) as content_of_disclosure_counseling, 
+--            max(if(o.concept_id = 163104, o.value_text, null)) as other_why_no_disclosure_counseling_done, 
+--            max(if(o.concept_id = 2031696, (case o.value_coded when 1536 then "Home" when 1589 then "Hospital" when 1000045 then "Clinic" else "" end), null)) as place_full_dislosure_occured, 
+--            max(if(o.concept_id = 1000164, (case o.value_coded when 1065 then "Yes" when 1066 then "No" else "" end), null)) as is_date_of_full_disclosure_known, 
+--            max(if(o.concept_id = 160753, o.value_datetime, null)) as date_of_full_disclosure, 
+--            max(if(o.concept_id = 164433, o.value_text, null)) as date_of_full_disclosure_not_known_specify,  
+--            max(if(o.concept_id = 159425, (case o.value_coded when 5619 then "Health provider" when 5622 then "Other" when 168970 then "Caregiver" else "" end), null)) as who_conducted_full_disclosure, 
+--            max(if(o.concept_id = 162169, o.value_text, null)) as other_who_conducted_full_disclosure, 
+--            max(if(o.concept_id = 169422, (case o.value_coded when 1550 then "Unplanned/Accidental" when 168846 then "Planned" else "" end), null)) as nature_of_disclosure, 
+--            max(if(o.concept_id = 160632, o.value_text, null)) as child_reactions_dislosure, 
+--            max(if(o.concept_id = 163258, o.value_text, null)) as cadre, 
+--            max(if(o.concept_id = 162724, o.value_text, null)) as department, 
+--            max(if(o.concept_id = 5096, o.value_datetime, null)) as date_of_followup_visit,
+--            max(if(o.obs_group = 1528 and o.concept_id = 1562,(case o.value_coded 
+--            when 162678 then "Worse than before disclosure" 
+--            when 164381 then "Same as before disclosure" 
+--            when 162677 then "Better than before disclosure"  
+--            else "" end), NULL)) as caregiver_reflection_behaviour,
+--            max(if(o.obs_group = 1528 and o.concept_id = 167099,(case o.value_coded 
+--            when 162678 then "Worse than before disclosure" 
+--            when 164381 then "Same as before disclosure" 
+--            when 162677 then "Better than before disclosure"  
+--            else "" end), NULL)) as caregiver_reflection_mood,
+--            max(if(o.obs_group = 1528 and o.concept_id = 164425,(case o.value_coded 
+--            when 162678 then "Worse than before disclosure" 
+--            when 164381 then "Same as before disclosure" 
+--            when 162677 then "Better than before disclosure"  
+--            else "" end), NULL)) as caregiver_reflection_adherence,
+--            max(if(o.obs_group = 1528 and o.concept_id = 165995,(case o.value_coded 
+--            when 162678 then "Worse than before disclosure" 
+--            when 164381 then "Same as before disclosure" 
+--            when 162677 then "Better than before disclosure"  
+--            else "" end), NULL)) as caregiver_reflection_interaction_caregiver,
+--            max(if(o.obs_group = 1796 and o.concept_id = 1562,(case o.value_coded 
+--            when 162678 then "Worse than before disclosure" 
+--            when 164381 then "Same as before disclosure" 
+--            when 162677 then "Better than before disclosure"  
+--            else "" end), NULL)) as provider_reflection_behaviour,
+--            max(if(o.obs_group = 1796 and o.concept_id = 167099,(case o.value_coded 
+--            when 162678 then "Worse than before disclosure" 
+--            when 164381 then "Same as before disclosure" 
+--            when 162677 then "Better than before disclosure"  
+--            else "" end), NULL)) as provider_reflection_mood,
+--            max(if(o.obs_group = 1796 and o.concept_id = 164425,(case o.value_coded 
+--            when 162678 then "Worse than before disclosure" 
+--            when 164381 then "Same as before disclosure" 
+--            when 162677 then "Better than before disclosure"  
+--            else "" end), NULL)) as provider_reflection_adherence,
+--            max(if(o.obs_group = 1796 and o.concept_id = 165995,(case o.value_coded 
+--            when 162678 then "Worse than before disclosure" 
+--            when 164381 then "Same as before disclosure" 
+--            when 162677 then "Better than before disclosure"  
+--            else "" end), NULL)) as provider_reflection_interaction_caregiver,
+--            max(if(o.obs_group = 1796 and o.concept_id = 163556,(case o.value_coded 
+--            when 162678 then "Worse than before disclosure" 
+--            when 164381 then "Same as before disclosure" 
+--            when 162677 then "Better than before disclosure"  
+--            else "" end), NULL)) as provider_reflection_interaction_provider,
+--             max(if(o.concept_id = 164378, o.value_text, null)) as action_taken_at_visit, 
+--             max(if(o.concept_id = 2032082, o.value_text, null)) as action_plan_caregiver, 
+--             max(if(o.concept_id = 2032081, o.value_text, null)) as action_plan_child, 
+--             max(if(o.concept_id = 163108, o.value_text, null)) as who_else_told_child_hiv_status,
+--            e.date_created,
+--            e.date_changed
+--     from encounter e
+--              inner join person p on p.person_id = e.patient_id and p.voided = 0
+--              inner join form f on f.form_id = e.form_id and f.uuid = '40b6b389-5b4e-47b1-aa15-88ee24b56f6a'
+--              left outer join obs o on o.encounter_id = e.encounter_id and o.concept_id in                                               
+--                                 (2010456,161011,969,164879,1000164,5303,2031957,160119,2032077,2031918,165070,164995,164992,163104,2031696,
+--                                 160753,164433,159425,162169,169422,160632,163258,162724,5096,1562,167099,164425,165995,163556,1796,1528)
+--         and o.voided = 0
+--     where e.voided = 0
+--     group by e.patient_id, date(e.encounter_datetime);
+--     SELECT "Completed processing ATP Dislosure Tracking";
+-- END $$
+
+
+
 DROP PROCEDURE IF EXISTS sp_populate_etl_atp_disclosure_tracking $$
 CREATE PROCEDURE sp_populate_etl_atp_disclosure_tracking()
 BEGIN
     SELECT "Processing ATP Disclosure Tracking ";
     INSERT INTO kenyaemr_etl.etl_atp_disclosure_tracking (
-        uuid,
-        provider,
-        patient_id,
-        visit_id,
-        visit_date,
-        location_id,
-        encounter_id,
-        chilld_primary_caregiver,
-        other_primary_caregiver,
-        who_brought_child_clinic,
-        other_who_brought_child_clinic,
-        clinic_report_child_knowsHave_Hiv,
-        child_knows_have_hiv,
-        child_know_have_illness,
-        child_response_why_take_medicaiton,
-        other_child_response_why_take_medicaiton,
-        who_brought_child_clinic_today,
-        disclosure_counseling_done,
-        no_disclosure_counseling_done_why,
-        content_of_disclosure_counseling,
-        other_why_no_disclosure_counseling_done,
-        place_full_dislosure_occured,
-        is_date_of_full_disclosure_known,
-        date_of_full_disclosure,
-        date_of_full_disclosure_not_known_specify,
-        who_conducted_full_disclosure,
-        other_who_conducted_full_disclosure,
-        nature_of_disclosure,
-        child_reactions_dislosure,
-        cadre,
-        department,
-        date_of_followup_visit,
-        caregiver_reflection_behaviour,
-        caregiver_reflection_mood,
-        caregiver_reflection_adherence,
-        caregiver_reflection_interaction_caregiver,
-        provider_reflection_behaviour,
-        provider_reflection_mood,
-        provider_reflection_adherence,
-        provider_reflection_interaction_caregiver,
-        provider_reflection_interaction_provider,
-        action_taken_at_visit,
-        action_plan_caregiver,
-        action_plan_child,
-        who_else_told_child_hiv_status,
-        date_created,
-        date_last_modified)
-    select e.uuid,
-           e.creator,
-           e.patient_id,
-           e.visit_id,
-           date(e.encounter_datetime)                                            as visit_date,
-           e.location_id,
-           e.encounter_id,
-           max(if(o.concept_id = 2010456, o.value_coded, null))      as chilld_primary_caregiver,
-           max(if(o.concept_id = 161011, o.value_text, null))      as other_primary_caregiver,
-           max(if(o.concept_id = 969, o.value_coded, null))     as who_brought_child_clinic,
-           max(if(o.concept_id = 164879, o.value_text, null))   as other_who_brought_child_clinic,
-           max(if(o.concept_id = 1000164, o.value_coded, null))   as clinic_report_child_knowsHave_Hiv,
-           max(if(o.concept_id = 5303, o.value_coded, null)) as child_knows_have_hiv, 
-           max(if(o.concept_id = 2031957, o.value_coded, null)) as child_know_have_illness, 
-           max(if(o.concept_id = 160119, o.value_coded, null)) as child_response_why_take_medicaiton, 
-           max(if(o.concept_id = 2032077, o.value_text, null)) as other_child_response_why_take_medicaiton, 
-           max(if(o.concept_id = 2031918, o.value_text, null)) as who_brought_child_clinic_today, 
-           max(if(o.concept_id = 165070, o.value_coded, null)) as disclosure_counseling_done, 
-           max(if(o.concept_id = 164995, o.value_coded, null)) as no_disclosure_counseling_done_why,
-
-           max(if(o.concept_id = 164992, o.value_text, null)) as content_of_disclosure_counseling, 
-           max(if(o.concept_id = 163104, o.value_text, null)) as other_why_no_disclosure_counseling_done, 
-
-           max(if(o.concept_id = 2031696, o.value_coded, null)) as place_full_dislosure_occured, 
-           max(if(o.concept_id = 1000164, o.value_coded, null)) as is_date_of_full_disclosure_known, 
-           max(if(o.concept_id = 160753, o.value_datetime, null)) as date_of_full_disclosure, 
-           max(if(o.concept_id = 164433, o.value_text, null)) as date_of_full_disclosure_not_known_specify, 
-           max(if(o.concept_id = 159425, o.value_coded, null)) as who_conducted_full_disclosure, 
-           max(if(o.concept_id = 162169, o.value_text, null)) as other_who_conducted_full_disclosure, 
-           max(if(o.concept_id = 169422, o.value_coded, null)) as nature_of_disclosure, 
-           max(if(o.concept_id = 160632, o.value_text, null)) as child_reactions_dislosure, 
-           max(if(o.concept_id = 163258, o.value_text, null)) as cadre, 
-           max(if(o.concept_id = 162724, o.value_text, null)) as department, 
-           max(if(o.concept_id = 5096, o.value_datetime, null)) as date_of_followup_visit,
-           max(if(o.obs_group = 1528 and o.concept_id = 1562,o.value_coded, NULL)) as caregiver_reflection_behaviour,
-           max(if(o.obs_group = 1528 and o.concept_id = 167099,o.value_coded, NULL)) as caregiver_reflection_mood,
-           max(if(o.obs_group = 1528 and o.concept_id = 164425,o.value_coded, NULL)) as caregiver_reflection_adherence,
-           max(if(o.obs_group = 1528 and o.concept_id = 165995,o.value_coded, NULL)) as caregiver_reflection_interaction_caregiver,
-
-           max(if(o.obs_group = 1796 and o.concept_id = 1562,o.value_coded, NULL)) as provider_reflection_behaviour,
-           max(if(o.obs_group = 1796 and o.concept_id = 167099,o.value_coded, NULL)) as provider_reflection_mood,
-           max(if(o.obs_group = 1796 and o.concept_id = 164425,o.value_coded, NULL)) as provider_reflection_adherence,
-           max(if(o.obs_group = 1796 and o.concept_id = 165995,o.value_coded, NULL)) as provider_reflection_interaction_caregiver,
-           max(if(o.obs_group = 1796 and o.concept_id = 163556,o.value_coded, NULL)) as provider_reflection_interaction_provider,
-            max(if(o.concept_id = 164378, o.value_text, null)) as action_taken_at_visit, 
-            max(if(o.concept_id = 2032082, o.value_text, null)) as action_plan_caregiver, 
-            max(if(o.concept_id = 2032081, o.value_text, null)) as action_plan_child, 
-            max(if(o.concept_id = 163108, o.value_text, null)) as who_else_told_child_hiv_status,
-
-           e.date_created,
-           e.date_changed
+        uuid, provider, patient_id, visit_id, visit_date, location_id, encounter_id,
+        chilld_primary_caregiver, other_primary_caregiver, who_brought_child_clinic,
+        other_who_brought_child_clinic, clinic_report_child_knowsHave_Hiv, child_knows_have_hiv,
+        child_know_have_illness, child_response_why_take_medicaiton,
+        other_child_response_why_take_medicaiton, who_brought_child_clinic_today,
+        disclosure_counseling_done, no_disclosure_counseling_done_why,
+        content_of_disclosure_counseling, other_why_no_disclosure_counseling_done,
+        place_full_dislosure_occured, is_date_of_full_disclosure_known, date_of_full_disclosure,
+        date_of_full_disclosure_not_known_specify, who_conducted_full_disclosure,
+        other_who_conducted_full_disclosure, nature_of_disclosure, child_reactions_dislosure,
+        cadre, department, date_of_followup_visit,
+        caregiver_reflection_behaviour, caregiver_reflection_mood, caregiver_reflection_adherence,
+        caregiver_reflection_interaction_caregiver, provider_reflection_behaviour,
+        provider_reflection_mood, provider_reflection_adherence,
+        provider_reflection_interaction_caregiver, provider_reflection_interaction_provider,
+        action_taken_at_visit, action_plan_caregiver, action_plan_child,
+        who_else_told_child_hiv_status, date_created, date_last_modified)
+    select
+        e.uuid,
+        e.creator,
+        e.patient_id,
+        e.visit_id,
+        date(e.encounter_datetime)                                                                  as visit_date,
+        e.location_id,
+        e.encounter_id,
+        max(if(o.concept_id = 2010456, (case o.value_coded
+            when 970  then "Biological mother"
+            when 971  then "Biological father"
+            when 972  then "Sibling of child"
+            when 973  then "Grandmother"
+            when 975  then "Aunt/Uncle"
+            when 5620 then "Other"
+            else "" end), null))                                                                     as chilld_primary_caregiver,
+        max(if(o.concept_id = 161011, o.value_text, null))                                          as other_primary_caregiver,
+        max(if(o.concept_id = 969, (case o.value_coded
+            when 1527 then "Parent"
+            when 978  then "Came alone"
+            when 972  then "Sibling of child"
+            when 973  then "Grandparent"
+            when 975  then "Aunt/Uncle"
+            when 5620 then "Other"
+            else "" end), null))                                                                     as who_brought_child_clinic,
+        max(if(o.concept_id = 164879, o.value_text, null))                                          as other_who_brought_child_clinic,
+        max(if(o.concept_id = 1000164, (case o.value_coded
+            when 1065 then "Yes"
+            when 1066 then "No"
+            else "" end), null))                                                                     as clinic_report_child_knowsHave_Hiv,
+        max(if(o.concept_id = 5303, (case o.value_coded
+            when 1065   then "Yes, they understand well"
+            when 163720 then "Yes, but will review booklet"
+            when 1066   then "No"
+            else "" end), null))                                                                     as child_knows_have_hiv,
+        max(if(o.concept_id = 2031957, (case o.value_coded
+            when 1065 then "Yes"
+            when 1066 then "No"
+            else "" end), null))                                                                     as child_know_have_illness,
+        max(if(o.concept_id = 160119, (case o.value_coded
+            when 1066   then "Don't know"
+            when 137793 then "Mentions specific illness not HIV"
+            when 123676 then "Mentions immunity (make body strong, prevent illness)"
+            when 138571 then "I have HIV"
+            when 5622   then "Other"
+            else "" end), null))                                                                     as child_response_why_take_medicaiton,
+        max(if(o.concept_id = 2032077, o.value_text, null))                                         as other_child_response_why_take_medicaiton,
+        max(if(o.concept_id = 2031918, o.value_text, null))                                         as who_brought_child_clinic_today,
+        max(if(o.concept_id = 165070, (case o.value_coded
+            when 1065 then "Yes"
+            when 1066 then "No"
+            else "" end), null))                                                                     as disclosure_counseling_done,
+        max(if(o.concept_id = 164995, (case o.value_coded
+            when 163293 then "Child too sick"
+            when 163524 then "Already disclosed"
+            when 1118   then "Not ready"
+            when 160101 then "Short visit"
+            when 5622   then "Other"
+            else "" end), null))                                                                     as no_disclosure_counseling_done_why,
+        max(if(o.concept_id = 164992, o.value_text, null))                                          as content_of_disclosure_counseling,
+        max(if(o.concept_id = 163104, o.value_text, null))                                          as other_why_no_disclosure_counseling_done,
+        max(if(o.concept_id = 2031696, (case o.value_coded
+            when 1536    then "Home"
+            when 1589    then "Hospital"
+            when 1000045 then "Clinic"
+            else "" end), null))                                                                     as place_full_dislosure_occured,
+        max(if(o.concept_id = 1000164, (case o.value_coded
+            when 1065 then "Yes"
+            when 1066 then "No"
+            else "" end), null))                                                                     as is_date_of_full_disclosure_known,
+        max(if(o.concept_id = 160753, o.value_datetime, null))                                      as date_of_full_disclosure,
+        max(if(o.concept_id = 164433, o.value_text, null))                                          as date_of_full_disclosure_not_known_specify,
+        max(if(o.concept_id = 159425, (case o.value_coded
+            when 5619   then "Health provider"
+            when 5622   then "Other"
+            when 168970 then "Caregiver"
+            else "" end), null))                                                                     as who_conducted_full_disclosure,
+        max(if(o.concept_id = 162169, o.value_text, null))                                          as other_who_conducted_full_disclosure,
+        max(if(o.concept_id = 169422, (case o.value_coded
+            when 1550   then "Unplanned/Accidental"
+            when 168846 then "Planned"
+            else "" end), null))                                                                     as nature_of_disclosure,
+        max(if(o.concept_id = 160632, o.value_text, null))                                          as child_reactions_dislosure,
+        max(if(o.concept_id = 163258, o.value_text, null))                                          as cadre,
+        max(if(o.concept_id = 162724, o.value_text, null))                                          as department,
+        max(if(o.concept_id = 5096,   o.value_datetime, null))                                      as date_of_followup_visit,
+        -- ---- obs group fields resolved via left join subquery below ----
+        max(rg.caregiver_reflection_behaviour)                                                       as caregiver_reflection_behaviour,
+        max(rg.caregiver_reflection_mood)                                                            as caregiver_reflection_mood,
+        max(rg.caregiver_reflection_adherence)                                                       as caregiver_reflection_adherence,
+        max(rg.caregiver_reflection_interaction_caregiver)                                           as caregiver_reflection_interaction_caregiver,
+        max(rg.provider_reflection_behaviour)                                                        as provider_reflection_behaviour,
+        max(rg.provider_reflection_mood)                                                             as provider_reflection_mood,
+        max(rg.provider_reflection_adherence)                                                        as provider_reflection_adherence,
+        max(rg.provider_reflection_interaction_caregiver)                                            as provider_reflection_interaction_caregiver,
+        max(rg.provider_reflection_interaction_provider)                                             as provider_reflection_interaction_provider,
+        -- ----------------------------------------------------------------
+        max(if(o.concept_id = 164378, o.value_text, null))                                          as action_taken_at_visit,
+        max(if(o.concept_id = 2032082, o.value_text, null))                                         as action_plan_caregiver,
+        max(if(o.concept_id = 2032081, o.value_text, null))                                         as action_plan_child,
+        max(if(o.concept_id = 163108, o.value_text, null))                                          as who_else_told_child_hiv_status,
+        e.date_created,
+        e.date_changed
     from encounter e
-             inner join person p on p.person_id = e.patient_id and p.voided = 0
-             inner join form f on f.form_id = e.form_id and f.uuid = '40b6b389-5b4e-47b1-aa15-88ee24b56f6a'
-             left outer join obs o on o.encounter_id = e.encounter_id and o.concept_id in                                               
-                                (2010456,161011,969,164879,1000164,5303,2031957,160119,2032077,2031918,165070,164995,164992,163104,2031696,
-                                160753,164433,159425,162169,169422,160632,163258,162724,5096,1562,167099,164425,165995,163556,1796,1528)
-        and o.voided = 0
+        inner join person p on p.person_id = e.patient_id and p.voided = 0
+        inner join form f on f.form_id = e.form_id and f.uuid = '40b6b389-5b4e-47b1-aa15-88ee24b56f6a'
+        inner join obs o on o.encounter_id = e.encounter_id
+            and o.concept_id in (2010456,161011,969,164879,1000164,5303,2031957,160119,2032077,
+                                 2031918,165070,164995,164992,163104,2031696,160753,164433,159425,
+                                 162169,169422,160632,163258,162724,5096,164378,2032082,2032081,163108)
+            and o.voided = 0
+        -- ---- obs group subquery (caregiver group=1528, provider group=1796) ----
+        left join (
+            select
+                o.encounter_id,
+                o.obs_group_id,
+                max(if(og.concept_id = 1528 and o.concept_id = 1562,  (case o.value_coded
+                    when 162678 then "Worse than before disclosure"
+                    when 164381 then "Same as before disclosure"
+                    when 162677 then "Better than before disclosure"
+                    else "" end), null))                                as caregiver_reflection_behaviour,
+                max(if(og.concept_id = 1528 and o.concept_id = 167099, (case o.value_coded
+                    when 162678 then "Worse than before disclosure"
+                    when 164381 then "Same as before disclosure"
+                    when 162677 then "Better than before disclosure"
+                    else "" end), null))                                as caregiver_reflection_mood,
+                max(if(og.concept_id = 1528 and o.concept_id = 164425, (case o.value_coded
+                    when 162678 then "Worse than before disclosure"
+                    when 164381 then "Same as before disclosure"
+                    when 162677 then "Better than before disclosure"
+                    else "" end), null))                                as caregiver_reflection_adherence,
+                max(if(og.concept_id = 1528 and o.concept_id = 165995, (case o.value_coded
+                    when 162678 then "Worse than before disclosure"
+                    when 164381 then "Same as before disclosure"
+                    when 162677 then "Better than before disclosure"
+                    else "" end), null))                                as caregiver_reflection_interaction_caregiver,
+                max(if(og.concept_id = 1796 and o.concept_id = 1562,  (case o.value_coded
+                    when 162678 then "Worse than before disclosure"
+                    when 164381 then "Same as before disclosure"
+                    when 162677 then "Better than before disclosure"
+                    else "" end), null))                                as provider_reflection_behaviour,
+                max(if(og.concept_id = 1796 and o.concept_id = 167099, (case o.value_coded
+                    when 162678 then "Worse than before disclosure"
+                    when 164381 then "Same as before disclosure"
+                    when 162677 then "Better than before disclosure"
+                    else "" end), null))                                as provider_reflection_mood,
+                max(if(og.concept_id = 1796 and o.concept_id = 164425, (case o.value_coded
+                    when 162678 then "Worse than before disclosure"
+                    when 164381 then "Same as before disclosure"
+                    when 162677 then "Better than before disclosure"
+                    else "" end), null))                                as provider_reflection_adherence,
+                max(if(og.concept_id = 1796 and o.concept_id = 165995, (case o.value_coded
+                    when 162678 then "Worse than before disclosure"
+                    when 164381 then "Same as before disclosure"
+                    when 162677 then "Better than before disclosure"
+                    else "" end), null))                                as provider_reflection_interaction_caregiver,
+                max(if(og.concept_id = 1796 and o.concept_id = 163556, (case o.value_coded
+                    when 162678 then "Worse than before disclosure"
+                    when 164381 then "Same as before disclosure"
+                    when 162677 then "Better than before disclosure"
+                    else "" end), null))                                as provider_reflection_interaction_provider
+            from obs o
+                inner join obs og on og.obs_id = o.obs_group_id       -- join child obs → parent group obs
+                inner join encounter e on e.encounter_id = o.encounter_id
+                inner join form f on f.form_id = e.form_id and f.uuid = '40b6b389-5b4e-47b1-aa15-88ee24b56f6a'
+            where o.concept_id in (1562, 167099, 164425, 165995, 163556)
+              and og.concept_id in (1528, 1796)                        -- caregiver group / provider group
+              and o.voided = 0
+            group by o.encounter_id, o.obs_group_id
+        ) rg on rg.encounter_id = e.encounter_id
+        -- -----------------------------------------------------------------------
     where e.voided = 0
     group by e.patient_id, date(e.encounter_datetime);
-    SELECT "Completed processing ATP Dislosure Tracking";
+    SELECT "Completed processing ATP Disclosure Tracking";
 END $$
 
 
