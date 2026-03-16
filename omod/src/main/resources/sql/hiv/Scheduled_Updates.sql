@@ -11955,7 +11955,7 @@ BEGIN
         ) rg on rg.encounter_id = e.encounter_id
         -- -----------------------------------------------------------------------
     where e.voided = 0
-    group by e.patient_id, date(e.encounter_datetime);
+    group by e.patient_id, date(e.encounter_datetime)
     ON DUPLICATE KEY UPDATE provider=VALUES(provider),
     visit_date=VALUES(visit_date),
                             chilld_primary_caregiver=VALUES(chilld_primary_caregiver),
