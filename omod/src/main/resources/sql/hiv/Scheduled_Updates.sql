@@ -11447,7 +11447,7 @@ BEGIN
                             questions_caregiver_have_about_hiv=VALUES(questions_caregiver_have_about_hiv),
                             other_relative_who_brought_child_clinic=VALUES(other_relative_who_brought_child_clinic),
                             other_non_relative_who_brought_child_clinic=VALUES(other_non_relative_who_brought_child_clinic),
-                            other_relative_lives_child_household=VALUES(other_relative_lives_childhousehold),
+                            other_relative_lives_child_household=VALUES(other_relative_lives_child_household),
                             other_non_relative_lives_child_household=VALUES(other_non_relative_lives_child_household),
                             other_relative_gives_child_medication=VALUES(other_relative_gives_child_medication),
                             other_non_relative_gives_child_medication=VALUES(other_non_relative_gives_child_medication),
