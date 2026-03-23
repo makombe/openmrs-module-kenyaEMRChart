@@ -2626,115 +2626,133 @@ DROP PROCEDURE IF EXISTS sp_update_etl_laboratory_extract $$
 CREATE PROCEDURE sp_update_etl_laboratory_extract(IN last_update_time DATETIME)
   BEGIN
 
-    insert into kenyaemr_etl.etl_laboratory_extract(
-      uuid,
-      encounter_id,
-      patient_id,
-      location_id,
-      visit_date,
-      visit_id,
-      order_id,
-      lab_test,
-      urgency,
-      order_reason,
-	  order_test_name,
-      obs_id,
-	  result_test_name,
-	  result_name,
-	  set_member_conceptId,
-      test_result,
-      date_test_requested,
-      date_test_result_received,
-      date_created,
-      date_last_modified,
-      created_by
-    )
-    WITH RankedOrders AS (
-        SELECT
-            o.*,
-            ROW_NUMBER() OVER (
-                PARTITION BY o.patient_id, DATE(o.date_activated), o.concept_id
-                ORDER BY
-                    CASE WHEN EXISTS (SELECT 1 FROM obs x WHERE x.order_id = o.order_id AND x.voided = 0) THEN 0 ELSE 1 END,
-                    o.date_activated DESC,
-                    o.order_id DESC
-                ) AS rn
-        FROM orders o
-        WHERE o.order_type_id = 3
-          AND o.order_action IN ('NEW','REVISE')
-          AND o.voided = 0
-    ),
-         FilteredOrders AS (SELECT patient_id, encounter_id, order_id, concept_id, date_activated, urgency, order_reason, order_action, fulfiller_comment
-                            FROM RankedOrders
-                            WHERE rn = 1),
-		 LabOrderConcepts AS ( SELECT
-                                   cs.concept_set_id AS set_id,
-                                   cs.concept_id     AS member_concept_id,
-                                   n.name
-                               FROM concept_set cs
-                                        JOIN concept_name n ON cs.concept_id = n.concept_id
-                                   AND n.locale = 'en'
-                                   AND n.concept_name_type = 'FULLY_SPECIFIED'
-                               WHERE cs.concept_set = 1000628),
-         LabOrderResults AS (
-             SELECT
-                 o.obs_id,
-                 o.order_id,
-                 o.concept_id,
-                 o.obs_datetime,
-                 o.date_created,
-                 cd.name AS datatype,
-                 o.value_coded,
-                 o.value_numeric,
-                 o.value_text,
-                 tn.name AS result_test_name,
-                 rn.name AS result_name,
-                 CASE
-                     WHEN cd.name = 'Coded' THEN o.value_coded
-                     WHEN cd.name = 'Numeric' THEN o.value_numeric
-                     WHEN cd.name = 'Text' THEN o.value_text END AS test_result
-             FROM obs o
-                      JOIN concept c ON o.concept_id = c.concept_id
-                      JOIN concept_datatype cd ON c.datatype_id = cd.concept_datatype_id
-                 AND cd.name IN ('Coded','Numeric','Text')
-                      LEFT JOIN concept_name tn ON o.concept_id = tn.concept_id
-                 AND tn.locale = 'en'
-                 AND tn.concept_name_type = 'FULLY_SPECIFIED'
-                      LEFT JOIN concept_name rn ON o.value_coded = rn.concept_id
-                 AND rn.locale = 'en'
-                 AND rn.concept_name_type = 'FULLY_SPECIFIED'
-             WHERE o.order_id IS NOT NULL
-         )
-	SELECT
-        UUID(),
-        e.encounter_id,
-        e.patient_id,
-        e.location_id,
-        COALESCE(o.date_activated, lor.obs_datetime) as visit_date,
-        e.visit_id,
-        o.order_id,
-        o.concept_id,
-        o.urgency,
-        o.order_reason,
-        lc.name as order_test_name,
-        lor.obs_id,
-        lor.result_test_name,
-        COALESCE(lor.result_name,lor.value_numeric,lor.value_text) as result_name,
-        lor.concept_id as set_member_conceptId,
-        lor.test_result as test_result,
-        o.date_activated as date_test_requested,
-        lor.date_created as date_test_result_received,
-        e.date_created,
-        e.date_changed as date_last_modified,
-        e.creator
-    FROM encounter e
-             INNER JOIN FilteredOrders o ON o.encounter_id = e.encounter_id
-             INNER JOIN person p ON p.person_id = e.patient_id AND p.voided = 0
-             LEFT JOIN LabOrderConcepts lc ON o.concept_id = lc.member_concept_id
-             LEFT JOIN LabOrderResults lor ON o.order_id = lor.order_id
+      insert into kenyaemr_etl.etl_laboratory_extract(
+          uuid,
+          encounter_id,
+          patient_id,
+          location_id,
+          visit_date,
+          visit_id,
+          order_id,
+          lab_test,
+          urgency,
+          order_reason,
+          order_test_name,
+          obs_id,
+          result_test_name,
+          result_name,
+          set_member_conceptId,
+          test_result,
+          date_test_requested,
+          date_test_result_received,
+          date_created,
+          date_last_modified,
+          created_by
+      )
+      WITH ActiveLabOrders AS (
+          SELECT
+              o.order_id,
+              o.patient_id,
+              o.encounter_id,
+              o.concept_id,
+              o.date_activated,
+              o.urgency,
+              o.order_reason,
+              CASE WHEN EXISTS (
+                  SELECT 1 FROM obs x
+                  WHERE x.order_id = o.order_id AND x.voided = 0
+              ) THEN 1 ELSE 0 END AS has_result
+          FROM orders o
+          WHERE o.order_type_id = 3
+            AND o.order_action IN ('NEW','REVISE')
+            AND o.voided = 0
+      ),
+           RankedOrders AS (
+               SELECT
+                   o.*,
+                   ROW_NUMBER() OVER (
+                       PARTITION BY o.patient_id, DATE(o.date_activated), o.concept_id
+                       ORDER BY o.has_result DESC,
+                           o.order_id DESC
+                       ) AS rn
+               FROM ActiveLabOrders o
+           ),
+           FilteredOrders AS (
+               SELECT patient_id, encounter_id, order_id, concept_id, date_activated, urgency, order_reason
+               FROM RankedOrders
+               WHERE rn = 1
+           ),
+           LabOrderConcepts AS (
+               SELECT
+                   cs.concept_set_id AS set_id,
+                   cs.concept_id     AS member_concept_id,
+                   n.name
+               FROM concept_set cs
+                        JOIN concept_name n ON cs.concept_id = n.concept_id
+                   AND n.locale = 'en'
+                   AND n.concept_name_type = 'FULLY_SPECIFIED'
+               WHERE cs.concept_set = 1000628
+           ),
+           LabOrderResults AS (
+               SELECT
+                   o.obs_id,
+                   o.order_id,
+                   o.concept_id,
+                   o.obs_datetime,
+                   o.date_created,
+                   cd.name AS datatype,
+                   o.value_coded,
+                   o.value_numeric,
+                   o.value_text,
+                   tn.name AS result_test_name,
+                   rn.name AS result_name,
+                   CASE
+                       WHEN cd.name = 'Coded' THEN o.value_coded
+                       WHEN cd.name = 'Numeric' THEN o.value_numeric
+                       WHEN cd.name = 'Text' THEN o.value_text END AS test_result
+               FROM obs o
+                        JOIN concept c ON o.concept_id = c.concept_id
+                        JOIN concept_datatype cd ON c.datatype_id = cd.concept_datatype_id
+                   AND cd.name IN ('Coded','Numeric','Text')
+                        LEFT JOIN concept_name tn ON o.concept_id = tn.concept_id
+                   AND tn.locale = 'en'
+                   AND tn.concept_name_type = 'FULLY_SPECIFIED'
+                        LEFT JOIN concept_name rn ON o.value_coded = rn.concept_id
+                   AND rn.locale = 'en'
+                   AND rn.concept_name_type = 'FULLY_SPECIFIED'
+               WHERE o.order_id IS NOT NULL
+                 AND o.voided = 0
+           )
+      SELECT
+          UUID(),
+          e.encounter_id,
+          e.patient_id,
+          e.location_id,
+          COALESCE(o.date_activated, lor.obs_datetime) as visit_date,
+          e.visit_id,
+          o.order_id,
+          o.concept_id,
+          o.urgency,
+          o.order_reason,
+          lc.name as order_test_name,
+          lor.obs_id,
+          lor.result_test_name,
+          COALESCE(lor.result_name,lor.value_numeric,lor.value_text) as result_name,
+          lor.concept_id as set_member_conceptId,
+          lor.test_result as test_result,
+          o.date_activated as date_test_requested,
+          lor.date_created as date_test_result_received,
+          e.date_created,
+          e.date_changed as date_last_modified,
+          e.creator
+      FROM encounter e
+               INNER JOIN FilteredOrders o ON o.encounter_id = e.encounter_id
+               INNER JOIN person p ON p.person_id = e.patient_id AND p.voided = 0
+               LEFT JOIN LabOrderConcepts lc ON o.concept_id = lc.member_concept_id
+               LEFT JOIN LabOrderResults lor ON o.order_id = lor.order_id
       where e.date_created >= last_update_time
-            or e.date_changed >= last_update_time
-            or e.date_voided >= last_update_time
+         or e.date_changed >= last_update_time
+         or e.date_voided >= last_update_time
 	group by order_id
     ON DUPLICATE KEY UPDATE visit_date=VALUES(visit_date), lab_test=VALUES(lab_test), set_member_conceptId=VALUES(set_member_conceptId), test_result=VALUES(test_result);
     END $$
@@ -7576,8 +7594,8 @@ from encounter e
                           o1.date_created,o1.date_voided,o1.voided from obs o join obs o1 on o.obs_id = o1.obs_group_id
                                                                                 and o1.concept_id in (1148,966,1691,1088,1087,1181,165269) and o1.voided=0
                                                                                 and o.concept_id in(160741,1085)) o1 on o1.encounter_id = e.encounter_id
-where e.voided=0 and e.date_created >= last_update_time or e.date_changed >= last_update_time or e.date_voided >= last_update_time or o1.date_created >= last_update_time
-or o1.date_voided >= last_update_time
+where e.voided=0 and (e.date_created >= last_update_time or e.date_changed >= last_update_time or e.date_voided >= last_update_time or o1.date_created >= last_update_time
+or o1.date_voided >= last_update_time)
 group by o1.obs_id order by e.patient_id
 ON DUPLICATE KEY UPDATE visit_date=VALUES(visit_date),provider=VALUES(provider),PMTCT=VALUES(PMTCT),PMTCT_regimen=VALUES(PMTCT_regimen),PEP=VALUES(PEP),PEP_regimen=VALUES(PEP_regimen),
 PrEP=VALUES(PrEP),PrEP_regimen=VALUES(PrEP_regimen),HAART=VALUES(HAART),HAART_regimen=VALUES(HAART_regimen),voided=VALUES(voided);
@@ -9080,9 +9098,9 @@ INSERT INTO kenyaemr_etl.etl_patient_appointment(patient_appointment_id,
       date_created
       FROM patient_appointment
       where voided = 0
-        and date_created >= last_update_time
+        and (date_created >= last_update_time
        or date_changed >= last_update_time
-       or date_voided >= last_update_time
+       or date_voided >= last_update_time)
     group by patient_id
     ON DUPLICATE KEY UPDATE visit_date=VALUES(visit_date),
                             start_date_time=VALUES(start_date_time),
@@ -10011,12 +10029,12 @@ BEGIN
              inner join form f on f.form_id = e.form_id and f.uuid = 'a52c57d4-110f-4879-82ae-907b0d90add6'
              left outer join obs o on o.encounter_id = e.encounter_id and o.concept_id in
                   (160653,1382,374,167523,1386,166864,164901,160632,1379,166866,1177,167255,163145,160481,164359)
-        and o.voided=0
-    where e.voided = 0 and e.date_created >= last_update_time
+         and o.voided=0
+    where e.voided = 0 and (e.date_created >= last_update_time
        or e.date_changed >= last_update_time
        or e.date_voided >= last_update_time
        or o.date_created >= last_update_time
-       or o.date_voided >= last_update_time
+       or o.date_voided >= last_update_time)
     group by e.patient_id, date(e.encounter_datetime)
     ON DUPLICATE KEY UPDATE
          provider=VALUES(provider),
@@ -10130,12 +10148,12 @@ BEGIN
              inner join form f on f.form_id = e.form_id and f.uuid = '18c209ac-0787-4b51-b9aa-aa8b1581239c'
              left outer join obs o on o.encounter_id = e.encounter_id and o.concept_id in
                                                                           (164181,160338,160478,160632,164812,162725,1000485,160632,160629,1475,160629,602,165241,163580,165002,165250,163304,165250,161011,160433,163145,159495,162724,1640,162879,162477,1655,1000075,1896)
-        and o.voided=0
-    where e.voided = 0 and e.date_created >= last_update_time
+         and o.voided=0
+    where e.voided = 0 and (e.date_created >= last_update_time
        or e.date_changed >= last_update_time
        or e.date_voided >= last_update_time
        or o.date_created >= last_update_time
-       or o.date_voided >= last_update_time
+       or o.date_voided >= last_update_time)
     group by e.patient_id, date(e.encounter_datetime)
     ON DUPLICATE KEY UPDATE
                          provider=VALUES(provider),
@@ -10334,14 +10352,14 @@ left outer join obs o on o.encounter_id = e.encounter_id and o.concept_id in
                                165104, 160433,
                                163145, 159495, 162724, 1640, 162879, 162477,
                                1655, 1000075, 1896,165302, 165043)
-and o.voided = 0
-where e.voided = 0 and e.date_created >= last_update_time
-or e.date_changed >= last_update_time
-or e.date_voided >= last_update_time
-or o.date_created >= last_update_time
-or o.date_voided >= last_update_time
-group by e.patient_id, date(e.encounter_datetime)
-ON DUPLICATE KEY UPDATE provider=VALUES(provider),
+         and o.voided = 0
+    where e.voided = 0 and (e.date_created >= last_update_time
+       or e.date_changed >= last_update_time
+       or e.date_voided >= last_update_time
+       or o.date_created >= last_update_time
+       or o.date_voided >= last_update_time)
+    group by e.patient_id, date(e.encounter_datetime)
+    ON DUPLICATE KEY UPDATE provider=VALUES(provider),
 visit_date=VALUES(visit_date),
 visit_type=VALUES(visit_type),
 referred_from=VALUES(referred_from),
@@ -10814,12 +10832,12 @@ BEGIN
                                                                            163191, 169043, 159813, 123160, 165205,
                                                                            164401, 164956, 165153, 165154, 160632,
                                                                            159811, 165239, 162724, 162053, 165036)
-        and o.voided = 0
-    where e.voided = 0 and e.date_created >= last_update_time
+         and o.voided = 0
+    where e.voided = 0 and (e.date_created >= last_update_time
        or e.date_changed >= last_update_time
        or e.date_voided >= last_update_time
        or o.date_created >= last_update_time
-       or o.date_voided >= last_update_time
+       or o.date_voided >= last_update_time)
     group by e.patient_id, date(e.encounter_datetime)
     ON DUPLICATE KEY UPDATE provider=VALUES(provider),
         visit_date=VALUES(visit_date),
@@ -10911,12 +10929,12 @@ BEGIN
              left outer join obs o on o.encounter_id = e.encounter_id and o.concept_id in
                                                                           (166937, 166607, 163777, 5096, 160753, 168804,
                                                                            165163, 162869, 164947, 163766, 166865,165353)
-        and o.voided = 0
-    where e.voided = 0 and e.date_created >= last_update_time
+         and o.voided = 0
+    where e.voided = 0 and (e.date_created >= last_update_time
        or e.date_changed >= last_update_time
        or e.date_voided >= last_update_time
        or o.date_created >= last_update_time
-       or o.date_voided >= last_update_time
+       or o.date_voided >= last_update_time)
     group by e.patient_id, date(e.encounter_datetime)
     ON DUPLICATE KEY UPDATE provider=VALUES(provider),
                             visit_date=VALUES(visit_date),
@@ -11017,11 +11035,11 @@ BEGIN
                                                                            163076,162169)
         and o.voided = 0
     where e.voided = 0
-and e.date_created >= last_update_time
+    and (e.date_created >= last_update_time
        or e.date_changed >= last_update_time
        or e.date_voided >= last_update_time
        or o.date_created >= last_update_time
-       or o.date_voided >= last_update_time
+       or o.date_voided >= last_update_time)
     group by e.patient_id, date(e.encounter_datetime)
     ON DUPLICATE KEY UPDATE provider=VALUES(provider),
     visit_date=VALUES(visit_date),
@@ -11174,11 +11192,11 @@ BEGIN
                                 161911,164879)
         and o.voided = 0
     where e.voided = 0
-    and e.date_created >= last_update_time
+    and (e.date_created >= last_update_time
        or e.date_changed >= last_update_time
        or e.date_voided >= last_update_time
        or o.date_created >= last_update_time
-       or o.date_voided >= last_update_time
+       or o.date_voided >= last_update_time)
     group by e.patient_id, date(e.encounter_datetime)
     ON DUPLICATE KEY UPDATE provider=VALUES(provider),
     visit_date=VALUES(visit_date),
@@ -11295,18 +11313,18 @@ BEGIN
            e.encounter_id,
            max(if(o.concept_id = 2031464, (case o.value_coded when 1000061 then "Pediatric clinic" when 2016041 then "Adolescent clinic" when 5622 then "Other" else "" end), null))  as entry_point_at_enrolment,
            max(if(o.concept_id = 160632, o.value_text, null))                as other_entry_point_specify,
-           max(if(o.concept_id = 969, (case o.value_coded 
-           when 970 then "Mother" 
-           when 971 then "Father" 
-           when 972 then "Sibling" 
-           when 973 then "Grandparent" 
-           when 1582 then "Other non-relative" 
-           when 975 then "Aunt/Uncle" 
-           when 976 then "Grandparent" 
-           when 978 then "Self (Came alone)" 
-           when 5620 then "Other Relative" 
+           max(if(o.concept_id = 969, (case o.value_coded
+           when 970 then "Mother"
+           when 971 then "Father"
+           when 972 then "Sibling"
+           when 973 then "Grandparent"
+           when 1582 then "Other non-relative"
+           when 975 then "Aunt/Uncle"
+           when 976 then "Grandparent"
+           when 978 then "Self (Came alone)"
+           when 5620 then "Other Relative"
            else "" end), null))     as who_brought_child_clinic,
-            concat_ws(',', max(if(o.concept_id = 159892 and o.value_coded = 970, 'Mother', null)), 
+            concat_ws(',', max(if(o.concept_id = 159892 and o.value_coded = 970, 'Mother', null)),
                      max(if(o.concept_id = 159892 and o.value_coded = 971, 'Father', null)),
                      max(if(o.concept_id = 159892 and o.value_coded = 972, 'Sibling', null)),
                      max(if(o.concept_id = 159892 and o.value_coded = 973, 'Grandparent', null)),
@@ -11314,7 +11332,7 @@ BEGIN
                      max(if(o.concept_id = 159892 and o.value_coded = 975, 'Aunt/Uncle', null)),
                      max(if(o.concept_id = 159892 and o.value_coded = 976, 'Grandparent', null)),
                      max(if(o.concept_id = 159892 and o.value_coded = 5620, 'Other Relative', null)))   as who_else_lives_child_household,
-            concat_ws(',', max(if(o.concept_id = 166665 and o.value_coded = 970, 'Mother', null)), 
+            concat_ws(',', max(if(o.concept_id = 166665 and o.value_coded = 970, 'Mother', null)),
                      max(if(o.concept_id = 166665 and o.value_coded = 971, 'Father', null)),
                      max(if(o.concept_id = 166665 and o.value_coded = 972, 'Sibling', null)),
                      max(if(o.concept_id = 166665 and o.value_coded = 973, 'Grandparent', null)),
@@ -11323,7 +11341,7 @@ BEGIN
                      max(if(o.concept_id = 166665 and o.value_coded = 975, 'Aunt/Uncle', null)),
                      max(if(o.concept_id = 166665 and o.value_coded = 976, 'Grandparent', null)),
                      max(if(o.concept_id = 166665 and o.value_coded = 5620, 'Other Relative', null)))   as gives_child_medication,
-             concat_ws(',', max(if(o.concept_id = 5303 and o.value_coded = 970, 'Mother', null)), 
+             concat_ws(',', max(if(o.concept_id = 5303 and o.value_coded = 970, 'Mother', null)),
                      max(if(o.concept_id = 5303 and o.value_coded = 971, 'Father', null)),
                      max(if(o.concept_id = 5303 and o.value_coded = 972, 'Sibling', null)),
                      max(if(o.concept_id = 5303 and o.value_coded = 973, 'Grandparent', null)),
@@ -11331,25 +11349,25 @@ BEGIN
                      max(if(o.concept_id = 5303 and o.value_coded = 1582, 'Other non-relative', null)),
                      max(if(o.concept_id = 5303 and o.value_coded = 975, 'Aunt/Uncle', null)),
                      max(if(o.concept_id = 5303 and o.value_coded = 976, 'Grandparent', null)),
-                     max(if(o.concept_id = 5303 and o.value_coded = 5620, 'Other Relative', null)))   as knows_child_hiv_status,         
+                     max(if(o.concept_id = 5303 and o.value_coded = 5620, 'Other Relative', null)))   as knows_child_hiv_status,
            max(if(o.concept_id = 159424,(case o.value_coded when 1065 then "Yes" when 1066 then "No" else "" end), null))   as other_house_member_has_hiv,
            max(if(o.concept_id = 160119,(case o.value_coded when 1065 then "Yes" when 1066 then "No" else "" end), null))     as family_member_taking_arvs,
            max(if(o.concept_id = 1000606,(case o.value_coded when 1065 then "Yes" when 1066 then "No" else "" end), null))   as  discussed_informing_child_hiv_status,
            max(if(o.concept_id = 160433, (case o.value_coded when 1065 then "Child should be told now" when 1066 then "Child should be told later" else "" end), null))     as  discussion_outcome ,
-            concat_ws(',', max(if(o.concept_id = 167681 and o.value_coded = 137793, 'They have illness', null)), 
+            concat_ws(',', max(if(o.concept_id = 167681 and o.value_coded = 137793, 'They have illness', null)),
                      max(if(o.concept_id = 167681 and o.value_coded = 2031737, 'To remain strong', null)),
                      max(if(o.concept_id = 167681 and o.value_coded = 163560, 'To prevent illness', null)),
                      max(if(o.concept_id = 167681 and o.value_coded = 5622, 'Other', null)))   as child_told_why_come_clinic_or_medication,
-            concat_ws(',', max(if(o.concept_id = 2010482 and o.value_coded = 137793, 'Why they take medicine', null)), 
+            concat_ws(',', max(if(o.concept_id = 2010482 and o.value_coded = 137793, 'Why they take medicine', null)),
                      max(if(o.concept_id = 2010482 and o.value_coded = 2031737, 'When they will stop medicine', null)),
                      max(if(o.concept_id = 2010482 and o.value_coded = 163560, 'Why others not taking medicine', null)),
                      max(if(o.concept_id = 2010482 and o.value_coded = 5622, 'Other', null)))   as questions_child_asking,
-             concat_ws(',', max(if(o.concept_id = 168360 and o.value_coded = 137793, 'They have illness', null)), 
+             concat_ws(',', max(if(o.concept_id = 168360 and o.value_coded = 137793, 'They have illness', null)),
                      max(if(o.concept_id = 168360 and o.value_coded = 2031737, 'To remain strong', null)),
                      max(if(o.concept_id = 168360 and o.value_coded = 163560, 'To prevent illness', null)),
                      max(if(o.concept_id = 168360 and o.value_coded = 5622, 'Other', null)))   as care_giver_answer,
            max(if(o.concept_id = 164991, (case o.value_coded when 1065 then "Yes" when 1066 then "No" else "" end), null))   as child_ever_talk_about_hiv,
-           concat_ws(',', max(if(o.concept_id = 166980 and o.value_coded = 1065, 'HIV can be treated', null)), 
+           concat_ws(',', max(if(o.concept_id = 166980 and o.value_coded = 1065, 'HIV can be treated', null)),
                      max(if(o.concept_id = 166980 and o.value_coded = 1066, 'People with HIV can live normal', null)),
                      max(if(o.concept_id = 166980 and o.value_coded = 1067, 'HIV kills', null)),
                      max(if(o.concept_id = 166980 and o.value_coded = 5622, 'Other', null)))   as what_does_child_say,
@@ -11358,29 +11376,29 @@ BEGIN
             max(if(o.concept_id = 159928,(case o.value_coded when 1065 then "Yes" when 1066 then "No" else "" end), null))     as child_like_school,
             max(if(o.concept_id = 165295,(case o.value_coded when 1065 then "Yes" when 1066 then "No" else "" end), null))     as child_have_friends,
            max(if(o.concept_id = 160618, o.value_text, null))   as child_behaviour_home,
-          concat_ws(',', max(if(o.concept_id = 164995 and o.value_coded = 1065, 'Child will not cope well', null)), 
+          concat_ws(',', max(if(o.concept_id = 164995 and o.value_coded = 1065, 'Child will not cope well', null)),
                      max(if(o.concept_id = 164995 and o.value_coded = 163475, 'Child will blame parent ', null)),
                      max(if(o.concept_id = 164995 and o.value_coded = 5622, 'Other', null)))   as worries_learning_hiv_status,
-         max(if(o.concept_id = 159775,(case o.value_coded when 2010458 then "By the caregiver" 
-         when 5620 then "By the caregiver with another family member" 
+         max(if(o.concept_id = 159775,(case o.value_coded when 2010458 then "By the caregiver"
+         when 5620 then "By the caregiver with another family member"
          when 164944 then "By the caregiver with the HCW"
          when 166443 then "By HCW with caregiver"
          else "" end), null))     as disclosure_preference,
-         max(if(o.concept_id = 159642,(case o.value_coded when 160131 then "Today" 
-         when 2031621 then "In 3 mo" 
+         max(if(o.concept_id = 159642,(case o.value_coded when 160131 then "Today"
+         when 2031621 then "In 3 mo"
          when 1000515 then "In 6 mo"
          when 167016 then "In 12 mo"
          when 5622 then "Other"
          else "" end), null))     as when_child_be_disclosed_to,
            max(if(o.concept_id = 161011, o.value_text, null))   as child_reactions_when_inform_status,
-           max(if(o.concept_id = 162749, o.value_text, null))   as questions_caregiver_have_about_hiv,       
+           max(if(o.concept_id = 162749, o.value_text, null))   as questions_caregiver_have_about_hiv,
            max(if(o.concept_id = 164879, o.value_text, null))   as other_relative_who_brought_child_clinic,
            max(if(o.concept_id = 165137, o.value_text, null))   as other_non_relative_who_brought_child_clinic,
            max(if(o.concept_id = 165092, o.value_text, null))   as other_relative_lives_child_household,
            max(if(o.concept_id = 162169, o.value_text, null))   as other_non_relative_lives_child_household,
            max(if(o.concept_id = 165645, o.value_text, null))   as other_relative_gives_child_medication,
            max(if(o.concept_id = 163042, o.value_text, null))   as other_non_relative_gives_child_medication,
-           concat_ws(',', max(if(o.concept_id = 165294 and o.value_coded = 970, 'Mother', null)), 
+           concat_ws(',', max(if(o.concept_id = 165294 and o.value_coded = 970, 'Mother', null)),
                      max(if(o.concept_id = 165294 and o.value_coded = 971, 'Father', null)),
                      max(if(o.concept_id = 165294 and o.value_coded = 972, 'Sibling', null)),
                      max(if(o.concept_id = 165294 and o.value_coded = 973, 'Grandparent', null)),
@@ -11413,11 +11431,11 @@ BEGIN
                                 164982,165143,165427,164963,145758,163258,162724)
         and o.voided = 0
     where e.voided = 0
-    and e.date_created >= last_update_time
+    and (e.date_created >= last_update_time
        or e.date_changed >= last_update_time
        or e.date_voided >= last_update_time
        or o.date_created >= last_update_time
-       or o.date_voided >= last_update_time
+       or o.date_voided >= last_update_time)
     group by e.patient_id, date(e.encounter_datetime)
     ON DUPLICATE KEY UPDATE provider=VALUES(provider),
     visit_date=VALUES(visit_date),
@@ -11511,36 +11529,36 @@ BEGIN
            e.location_id,
            e.encounter_id,
            max(if(o.concept_id = 160753, o.value_datetime, null))                   as date_of_full_disclosure,
-           concat_ws(',', max(if(o.concept_id = 165364 and o.value_coded = 1065, 'Discussed', null)), 
+           concat_ws(',', max(if(o.concept_id = 165364 and o.value_coded = 1065, 'Discussed', null)),
                      max(if(o.concept_id = 165364 and o.value_coded = 2016556, 'Mastered', null)),
                      max(if(o.concept_id = 165364 and o.value_coded = 1066, 'Not Discussed', null)))   as treatment_literacy,
-           concat_ws(',', max(if(o.concept_id = 166937 and o.value_coded = 1065, 'Discussed', null)), 
+           concat_ws(',', max(if(o.concept_id = 166937 and o.value_coded = 1065, 'Discussed', null)),
                      max(if(o.concept_id = 166937 and o.value_coded = 2016556, 'Mastered', null)),
                      max(if(o.concept_id = 166937 and o.value_coded = 1066, 'Not Discussed', null)))   as self_management,
-           concat_ws(',', max(if(o.concept_id = 165360 and o.value_coded = 1065, 'Discussed', null)), 
+           concat_ws(',', max(if(o.concept_id = 165360 and o.value_coded = 1065, 'Discussed', null)),
                      max(if(o.concept_id = 165360 and o.value_coded = 2016556, 'Mastered', null)),
                      max(if(o.concept_id = 165360 and o.value_coded = 1066, 'Not Discussed', null)))   as communication,
-           concat_ws(',', max(if(o.concept_id = 163766 and o.value_coded = 1065, 'Discussed', null)), 
+           concat_ws(',', max(if(o.concept_id = 163766 and o.value_coded = 1065, 'Discussed', null)),
                      max(if(o.concept_id = 163766 and o.value_coded = 2016556, 'Mastered', null)),
                      max(if(o.concept_id = 163766 and o.value_coded = 1066, 'Not Discussed', null)))   as support,
-           concat_ws(',', max(if(o.concept_id = 165363 and o.value_coded = 1065, 'Discussed', null)), 
+           concat_ws(',', max(if(o.concept_id = 165363 and o.value_coded = 1065, 'Discussed', null)),
                      max(if(o.concept_id = 165363 and o.value_coded = 2016556, 'Mastered', null)),
-                     max(if(o.concept_id = 165363 and o.value_coded = 1066, 'Not Discussed', null)))   as adult_clinic_expectations, 
-           max(if(o.concept_id = 1000164, (case o.value_coded when 1065 then "Yes" when 1066 then "No" else "" end), null)) as is_date_of_disclosure_known, 
+                     max(if(o.concept_id = 165363 and o.value_coded = 1066, 'Not Discussed', null)))   as adult_clinic_expectations,
+           max(if(o.concept_id = 1000164, (case o.value_coded when 1065 then "Yes" when 1066 then "No" else "" end), null)) as is_date_of_disclosure_known,
            max(if(o.concept_id = 164433, o.value_text, null)) as date_of_full_disclosure_not_known_specify,
-           max(if(o.concept_id = 2031464, (case o.value_coded 
+           max(if(o.concept_id = 2031464, (case o.value_coded
            when 1000061 then "Pediatric clinic"
            when 2016041 then "Adolescent clinic"
            when 1000045 then "CCC"
-           when 160538 then "PMTCT" 
-           when 5622 then "Other" else "" end), null)) as point_of_entry_at_enrollment, 
+           when 160538 then "PMTCT"
+           when 5622 then "Other" else "" end), null)) as point_of_entry_at_enrollment,
             max(if(o.concept_id = 160632, o.value_text, null)) as other_point_of_entry_at_enrollment, 
             max(if(o.concept_id = 163042, o.value_text, null)) as treatment_literacy_discussed, 
             max(if(o.concept_id = 163049, o.value_text, null)) as self_management_discussed, 
             max(if(o.concept_id = 163164, o.value_text, null)) as communication_discussed, 
             max(if(o.concept_id = 2031723, o.value_text, null)) as support_discussed,
            max(if(o.concept_id = 163258, o.value_text, null)) as cadre, 
-           max(if(o.concept_id = 162724, o.value_text, null)) as department,    
+           max(if(o.concept_id = 162724, o.value_text, null)) as department,
            e.date_created,
            e.date_changed
     from encounter e
@@ -11550,11 +11568,11 @@ BEGIN
                                 (160753,165364,166937,165360,163766,165363,1000164,164433,2031464,160632,163042,163049,163164,2031723,163258,162724)
         and o.voided = 0
     where e.voided = 0
-    and e.date_created >= last_update_time
+    and (e.date_created >= last_update_time
        or e.date_changed >= last_update_time
        or e.date_voided >= last_update_time
        or o.date_created >= last_update_time
-       or o.date_voided >= last_update_time
+       or o.date_voided >= last_update_time)
     group by e.patient_id, date(e.encounter_datetime)
     ON DUPLICATE KEY UPDATE provider=VALUES(provider),
     visit_date=VALUES(visit_date),
@@ -11573,7 +11591,7 @@ BEGIN
                             communication_discussed=VALUES(communication_discussed),
                             support_discussed=VALUES(support_discussed),
                             cadre=VALUES(cadre),
-                            department=VALUES(department),                               
+                            department=VALUES(department),
      date_created=VALUES(date_created),
      date_last_modified=VALUES(date_last_modified);
     SELECT "Completed processing ATP Taking charge tracking";
@@ -11639,33 +11657,33 @@ BEGIN
            max(if(o.concept_id = 1149, (case o.value_coded when 1065 then "Yes" when 1066 then "No" when 168280 then "Partially" else "" end), null))     as knows_name_of_arv,
            max(if(o.concept_id = 165244, (case o.value_coded when 1065 then "Yes" when 1066 then "No" when 168280 then "Partially" else "" end), null))   as explain_what_means_suppressed_vl,
            max(if(o.concept_id = 163310, (case o.value_coded when 1065 then "Yes" when 1066 then "No" when 168280 then "Partially" else "" end), null))   as state_what_thier_vl_is,
-           max(if(o.concept_id = 165245, (case o.value_coded when 1065 then "Yes" when 1066 then "No" when 168280 then "Partially" else "" end), null)) as knows_they_virally_suppressed, 
-           max(if(o.concept_id = 160288, (case o.value_coded when 1065 then "Yes" when 1066 then "No" when 168280 then "Partially" else "" end), null)) as know_day_date_of_current_clinic_visit, 
-           max(if(o.concept_id = 166484, (case o.value_coded when 1065 then "Yes" when 1066 then "No" when 168280 then "Partially" else "" end), null)) as came_on_scheduled, 
-           max(if(o.concept_id = 160582, (case o.value_coded when 1065 then "Yes" when 1066 then "No" when 168280 then "Partially" else "" end), null)) as explain_what_to_do_missed_medication, 
-           max(if(o.concept_id = 162886, (case o.value_coded when 1065 then "Yes" when 1066 then "No" when 168280 then "Partially" else "" end), null)) as explain_where_to_seek_medical_care, 
-           max(if(o.concept_id = 165315, (case o.value_coded when 1065 then "Yes" when 1066 then "No" when 168280 then "Partially" else "" end), null)) as navigate_clinic_services_on_own, 
-           max(if(o.concept_id = 162062, (case o.value_coded when 1065 then "Yes" when 1066 then "No" when 168280 then "Partially" else "" end), null)) as comfortable_comming_to_clinic, 
+           max(if(o.concept_id = 165245, (case o.value_coded when 1065 then "Yes" when 1066 then "No" when 168280 then "Partially" else "" end), null)) as knows_they_virally_suppressed,
+           max(if(o.concept_id = 160288, (case o.value_coded when 1065 then "Yes" when 1066 then "No" when 168280 then "Partially" else "" end), null)) as know_day_date_of_current_clinic_visit,
+           max(if(o.concept_id = 166484, (case o.value_coded when 1065 then "Yes" when 1066 then "No" when 168280 then "Partially" else "" end), null)) as came_on_scheduled,
+           max(if(o.concept_id = 160582, (case o.value_coded when 1065 then "Yes" when 1066 then "No" when 168280 then "Partially" else "" end), null)) as explain_what_to_do_missed_medication,
+           max(if(o.concept_id = 162886, (case o.value_coded when 1065 then "Yes" when 1066 then "No" when 168280 then "Partially" else "" end), null)) as explain_where_to_seek_medical_care,
+           max(if(o.concept_id = 165315, (case o.value_coded when 1065 then "Yes" when 1066 then "No" when 168280 then "Partially" else "" end), null)) as navigate_clinic_services_on_own,
+           max(if(o.concept_id = 162062, (case o.value_coded when 1065 then "Yes" when 1066 then "No" when 168280 then "Partially" else "" end), null)) as comfortable_comming_to_clinic,
            max(if(o.concept_id = 159395, o.value_text, null)) as feels_not_conmfortable_coming_to_clinic_specify, 
-           max(if(o.concept_id = 162871, (case o.value_coded when 1065 then "Yes" when 1066 then "No" when 168280 then "Partially" else "" end), null)) as medical_problem_report_symptoms, 
-           max(if(o.concept_id = 5619, (case o.value_coded when 1065 then "Yes" when 1066 then "No" when 168280 then "Partially" else "" end), null)) as feel_free_ask_hcw_questions, 
-           max(if(o.concept_id = 160575, (case o.value_coded when 1065 then "Yes" when 1066 then "No" when 168280 then "Partially" else "" end), null)) as feel_free_ask_hcw_reproductive_health, 
-           max(if(o.concept_id = 1635, (case o.value_coded when 1065 then "Yes" when 1066 then "No" when 168280 then "Partially" else "" end), null)) as name_different_contraception, 
-           max(if(o.concept_id = 2010457, (case o.value_coded when 1065 then "Yes" when 1066 then "No" when 168280 then "Partially" else "" end), null)) as identify_one_person_to_seek_help, 
-           max(if(o.concept_id = 163000, (case o.value_coded when 1065 then "Yes" when 1066 then "No" when 168280 then "Partially" else "" end), null)) as attends_peer_support_group, 
-           max(if(o.concept_id = 159425, (case o.value_coded when 1065 then "Yes" when 1066 then "No" when 168280 then "Partially" else "" end), null)) as disclose_hiv_status_someone_else, 
-           max(if(o.concept_id = 166665, (case o.value_coded when 1065 then "Yes" when 1066 then "No" when 168280 then "Partially" else "" end), null)) as identify_treatment_buddy, 
-           max(if(o.concept_id = 162060, (case o.value_coded when 1065 then "Yes" when 1066 then "No" when 168280 then "Partially" else "" end), null)) as varbalize_long_term_goals, 
-           max(if(o.concept_id = 165363, (case o.value_coded when 1065 then "Yes" when 1066 then "No" when 168280 then "Partially" else "" end), null)) as ready_to_transition_adult_care, 
-           max(if(o.concept_id = 160632, o.value_text, null)) as not_ready_for_transition_specify,        
-           max(if(o.concept_id = 1000164, (case o.value_coded when 1065 then "Yes" when 1066 then "No" when 168280 then "Partially" else "" end), null)) as is_date_of_disclosure_known, 
+           max(if(o.concept_id = 162871, (case o.value_coded when 1065 then "Yes" when 1066 then "No" when 168280 then "Partially" else "" end), null)) as medical_problem_report_symptoms,
+           max(if(o.concept_id = 5619, (case o.value_coded when 1065 then "Yes" when 1066 then "No" when 168280 then "Partially" else "" end), null)) as feel_free_ask_hcw_questions,
+           max(if(o.concept_id = 160575, (case o.value_coded when 1065 then "Yes" when 1066 then "No" when 168280 then "Partially" else "" end), null)) as feel_free_ask_hcw_reproductive_health,
+           max(if(o.concept_id = 1635, (case o.value_coded when 1065 then "Yes" when 1066 then "No" when 168280 then "Partially" else "" end), null)) as name_different_contraception,
+           max(if(o.concept_id = 2010457, (case o.value_coded when 1065 then "Yes" when 1066 then "No" when 168280 then "Partially" else "" end), null)) as identify_one_person_to_seek_help,
+           max(if(o.concept_id = 163000, (case o.value_coded when 1065 then "Yes" when 1066 then "No" when 168280 then "Partially" else "" end), null)) as attends_peer_support_group,
+           max(if(o.concept_id = 159425, (case o.value_coded when 1065 then "Yes" when 1066 then "No" when 168280 then "Partially" else "" end), null)) as disclose_hiv_status_someone_else,
+           max(if(o.concept_id = 166665, (case o.value_coded when 1065 then "Yes" when 1066 then "No" when 168280 then "Partially" else "" end), null)) as identify_treatment_buddy,
+           max(if(o.concept_id = 162060, (case o.value_coded when 1065 then "Yes" when 1066 then "No" when 168280 then "Partially" else "" end), null)) as varbalize_long_term_goals,
+           max(if(o.concept_id = 165363, (case o.value_coded when 1065 then "Yes" when 1066 then "No" when 168280 then "Partially" else "" end), null)) as ready_to_transition_adult_care,
+           max(if(o.concept_id = 160632, o.value_text, null)) as not_ready_for_transition_specify,
+           max(if(o.concept_id = 1000164, (case o.value_coded when 1065 then "Yes" when 1066 then "No" when 168280 then "Partially" else "" end), null)) as is_date_of_disclosure_known,
            max(if(o.concept_id = 160753, o.value_datetime, null)) as date_of_disclosure, 
            max(if(o.concept_id = 164433, o.value_text, null)) as date_of_full_disclosure_not_known_specify,
-           max(if(o.concept_id = 2031464, (case o.value_coded 
+           max(if(o.concept_id = 2031464, (case o.value_coded
            when 1000061 then "Pediatric clinic"
            when 2016041 then "Adolescent clinic"
            when 1000045 then "CCC"
-           when 160538 then "PMTCT" 
+           when 160538 then "PMTCT"
            when 5622 then "Other" else "" end), null)) as point_of_entry_at_enrollment,
            max(if(o.concept_id = 161011, o.value_text, null)) as other_point_of_entry_at_enrollment, 
            max(if(o.concept_id = 160579, (case o.value_coded when 1065 then "Yes" when 1066 then "No" when 168280 then "Partially" else "" end), null)) as ylh_having_sex,
@@ -11682,11 +11700,11 @@ BEGIN
                                 159425,166665,162060,165363,160632,1000164,160753,164433,2031464,161011,160579,163258,162724)
         and o.voided = 0
     where e.voided = 0
-    and e.date_created >= last_update_time
+    and (e.date_created >= last_update_time
        or e.date_changed >= last_update_time
        or e.date_voided >= last_update_time
        or o.date_created >= last_update_time
-       or o.date_voided >= last_update_time
+       or o.date_voided >= last_update_time)
     group by e.patient_id, date(e.encounter_datetime)
     ON DUPLICATE KEY UPDATE provider=VALUES(provider),
     visit_date=VALUES(visit_date),
@@ -11781,6 +11799,7 @@ BEGIN
           action_plan_caregiver,
           action_plan_child,
           who_else_told_child_hiv_status,
+
            date_created,
            date_last_modified)
     select
@@ -11955,6 +11974,11 @@ BEGIN
         ) rg on rg.encounter_id = e.encounter_id
         -- -----------------------------------------------------------------------
     where e.voided = 0
+    and (e.date_created >= last_update_time
+       or e.date_changed >= last_update_time
+       or e.date_voided >= last_update_time
+       or o.date_created >= last_update_time
+       or o.date_voided >= last_update_time)
     group by e.patient_id, date(e.encounter_datetime)
     ON DUPLICATE KEY UPDATE provider=VALUES(provider),
     visit_date=VALUES(visit_date),
@@ -12210,11 +12234,11 @@ from encounter e
        inner join obs o on o.encounter_id = e.encounter_id and o.concept_id in (164181,161550,159371,161011,1628,5219,1000485,119481,152909,160223,162725,162725,162747,162869,1169,163783,165198,152722,1191,1455,1000519,1000520,6042,161011,120240,161011,
                                                                                  162737,1124,1124,1124,1124,163308,166879,166676,1284,1284,165250,166665,161011,165070,165250,162737,162724,159623,160632) and o.voided=0
 where e.voided=0
-    and e.date_created >= last_update_time
+    and (e.date_created >= last_update_time
        or e.date_changed >= last_update_time
        or e.date_voided >= last_update_time
        or o.date_created >= last_update_time
-       or o.date_voided >= last_update_time
+       or o.date_voided >= last_update_time)
 group by e.encounter_id
 ON DUPLICATE KEY UPDATE provider=VALUES(provider),
         visit_date=VALUES(visit_date),
@@ -12366,11 +12390,11 @@ from encounter e
        inner join obs o on o.encounter_id = e.encounter_id and o.concept_id in (164181,152722,159449,1000519,1000520,6042,6042,161011,162737,1124,1124,1124,1124,163308,
        1127,1284,1284,166879,164075,162724,159623,160632) and o.voided=0
 where e.voided=0
-    and e.date_created >= last_update_time
+    and (e.date_created >= last_update_time
        or e.date_changed >= last_update_time
        or e.date_voided >= last_update_time
        or o.date_created >= last_update_time
-       or o.date_voided >= last_update_time
+       or o.date_voided >= last_update_time)
 group by e.encounter_id
 ON DUPLICATE KEY UPDATE provider=VALUES(provider),
         visit_date=VALUES(visit_date),
@@ -12446,11 +12470,11 @@ BEGIN
                         on et.encounter_type_id = e.encounter_type
              inner join obs o on o.encounter_id = e.encounter_id and o.concept_id in (1640,168882,169403) and o.voided=0
     where e.voided=0
-    and e.date_created >= last_update_time
+    and (e.date_created >= last_update_time
        or e.date_changed >= last_update_time
        or e.date_voided >= last_update_time
        or o.date_created >= last_update_time
-       or o.date_voided >= last_update_time
+       or o.date_voided >= last_update_time)
     group by e.encounter_id
     ON DUPLICATE KEY UPDATE provider=VALUES(provider),
                             visit_date=VALUES(visit_date),
@@ -12505,11 +12529,11 @@ BEGIN
              inner join form f on f.form_id = e.form_id and f.uuid = '98a781d2-b777-4756-b4c9-c9b0deb3483c'
              inner join obs o on o.encounter_id = e.encounter_id and o.concept_id in (160632,1695,5096,167079) and o.voided=0
     where e.voided=0
-    and e.date_created >= last_update_time
+    and (e.date_created >= last_update_time
        or e.date_changed >= last_update_time
        or e.date_voided >= last_update_time
        or o.date_created >= last_update_time
-       or o.date_voided >= last_update_time
+       or o.date_voided >= last_update_time)
     group by e.encounter_id
     ON DUPLICATE KEY UPDATE provider=VALUES(provider),
                             visit_date=VALUES(visit_date),
@@ -12560,11 +12584,11 @@ BEGIN
              inner join form f on f.form_id = e.form_id and f.uuid = '87379b0a-738b-4799-9736-cdac614cee2a'
              inner join obs o on o.encounter_id = e.encounter_id and o.concept_id in (167132,1695) and o.voided=0
     where e.voided=0
-    and e.date_created >= last_update_time
+    and (e.date_created >= last_update_time
        or e.date_changed >= last_update_time
        or e.date_voided >= last_update_time
        or o.date_created >= last_update_time
-       or o.date_voided >= last_update_time
+       or o.date_voided >= last_update_time)
     group by e.encounter_id
     ON DUPLICATE KEY UPDATE provider=VALUES(provider),
                             visit_date=VALUES(visit_date),
