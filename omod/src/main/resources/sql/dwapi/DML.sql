@@ -635,23 +635,36 @@ insert into dwapi_etl.etl_laboratory_extract(
     created_by,
     voided
 )
-WITH RankedOrders AS (
+WITH ActiveLabOrders AS (
     SELECT
-        o.*,
-        ROW_NUMBER() OVER (
-            PARTITION BY o.patient_id, DATE(o.date_activated), o.concept_id
-            ORDER BY
-                CASE WHEN EXISTS (SELECT 1 FROM obs x WHERE x.order_id = o.order_id AND x.voided = 0) THEN 0 ELSE 1 END,
-                o.date_activated DESC,
-                o.order_id DESC
-            ) AS rn
+        o.order_id,
+        o.patient_id,
+        o.encounter_id,
+        o.concept_id,
+        o.date_activated,
+        o.urgency,
+        o.order_reason,
+        CASE WHEN EXISTS (
+            SELECT 1 FROM obs x
+            WHERE x.order_id = o.order_id AND x.voided = 0
+        ) THEN 1 ELSE 0 END AS has_result
     FROM orders o
     WHERE o.order_type_id = 3
       AND o.order_action IN ('NEW','REVISE')
       AND o.voided = 0
 ),
+     RankedOrders AS (
+         SELECT
+             alo.*,
+             ROW_NUMBER() OVER (
+                 PARTITION BY alo.patient_id, DATE(alo.date_activated), alo.concept_id
+                 ORDER BY alo.has_result DESC,
+                          alo.order_id DESC
+             ) AS rn
+         FROM ActiveLabOrders alo
+     ),
      FilteredOrders AS (
-         SELECT patient_id, encounter_id, order_id, concept_id, date_activated, urgency, order_reason, order_action, fulfiller_comment
+         SELECT patient_id, encounter_id, order_id, concept_id, date_activated, urgency, order_reason
          FROM RankedOrders
          WHERE rn = 1
      ),
@@ -694,6 +707,7 @@ WITH RankedOrders AS (
              AND rn.locale = 'en'
              AND rn.concept_name_type = 'FULLY_SPECIFIED'
          WHERE o.order_id IS NOT NULL
+           AND o.voided = 0
      )
 SELECT
     UUID(),
