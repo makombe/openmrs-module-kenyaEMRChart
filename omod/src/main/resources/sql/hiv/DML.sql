@@ -3393,6 +3393,7 @@ SELECT
         ELSE lr.lab_latest_test_result
         END AS vl_result,
     CASE
+        WHEN lr.lab_latest_date_test_requested IS NULL AND lr.vl_at_enrollment IS NULL THEN lr.date_created
         WHEN lr.lab_latest_date_test_requested IS NULL AND lr.vl_at_enrollment IS NOT NULL THEN lr.date_created
         WHEN lr.lab_latest_date_test_requested IS NOT NULL AND lr.vl_at_enrollment IS NOT NULL
             AND lr.enrollment_vl_date > lr.lab_latest_date_test_requested THEN lr.date_created
