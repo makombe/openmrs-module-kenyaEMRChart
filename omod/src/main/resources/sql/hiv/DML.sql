@@ -3314,7 +3314,8 @@ WITH enrolled AS (
              v.breastfeeding AS breastfeeding_status,
              v.pregnancy_status,
              v.last_menstrual_period AS lmp_date,
-             v.pregnancy_outcome AS pg_outcome
+             v.pregnancy_outcome AS pg_outcome,
+             v.date_created AS fup_date_created
          FROM kenyaemr_etl.etl_patient_hiv_followup v
                   JOIN (
              SELECT patient_id, MAX(visit_date) AS max_visit_date
@@ -3363,6 +3364,7 @@ WITH enrolled AS (
              bvt.base_viral_load_test_date AS base_viral_load_test_date_ti,
              art.date_started_art,
              fup.latest_hiv_followup_visit,
+             fup.fup_date_created,
              fup.breastfeeding_status,
              fup.pregnancy_status,
              fup.lmp_date,
@@ -3397,7 +3399,11 @@ SELECT
         WHEN lr.lab_latest_date_test_requested IS NULL AND lr.vl_at_enrollment IS NOT NULL THEN lr.date_created
         WHEN lr.lab_latest_date_test_requested IS NOT NULL AND lr.vl_at_enrollment IS NOT NULL
             AND lr.enrollment_vl_date > lr.lab_latest_date_test_requested THEN lr.date_created
-        ELSE lr.lab_latest_date_created
+        ELSE CASE
+                 WHEN lr.lab_latest_date_created IS NULL THEN fup_date_created
+                 WHEN fup_date_created IS NULL THEN lr.lab_latest_date_created
+                 ELSE GREATEST(lr.lab_latest_date_created, fup_date_created)
+            END
         END AS date_created,
     CASE
         WHEN lr.lab_latest_date_test_requested IS NULL AND lr.vl_at_enrollment IS NOT NULL THEN lr.enrollment_vl_date
