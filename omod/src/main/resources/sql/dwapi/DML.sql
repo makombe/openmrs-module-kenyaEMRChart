@@ -9897,7 +9897,7 @@ BEGIN
              inner join form f on f.form_id = e.form_id and f.uuid in ('9a9cadd7-fba1-4a24-94aa-43edfbecf8d9')
              inner join obs o on o.encounter_id = e.encounter_id and o.concept_id in (164181,166636,160112,160638,1473,163181) and o.voided=0
     where e.voided=0
-    group by e.encounter_id
+    group by e.encounter_id;
 
     SELECT "Completed processing MAT mat intial registrations data... ";
 END $$
@@ -9924,6 +9924,7 @@ BEGIN
         treating_mental_disorder,
         diagnosed_illnesses,
         has_disease_type,
+        treated_disease,
         buprenorphine_induction,
         methadone_induction,
         date_created,
@@ -9961,7 +9962,7 @@ BEGIN
              inner join obs o on o.encounter_id = e.encounter_id and o.concept_id in (165220,159926,165040,166665,
                                                                                       165041,165254,159926,1284,164401,159926,165248,167370,167369) and o.voided=0
     where e.voided=0
-    group by e.encounter_id
+    group by e.encounter_id;
 
     SELECT "Completed processing MAT clinical encounter data... ";
 END $$
@@ -10001,7 +10002,7 @@ BEGIN
              inner join form f on f.form_id = e.form_id and f.uuid in ('b9495048-eceb-4dd2-bfba-330dc4900ee9')
              inner join obs o on o.encounter_id = e.encounter_id and o.concept_id in (1768) and o.voided=0
     where e.voided=0
-    group by e.encounter_id
+    group by e.encounter_id;
 
     SELECT "Completed processing MAT transit data... ";
 END $$
@@ -10046,7 +10047,7 @@ BEGIN
              inner join form f on f.form_id = e.form_id and f.uuid in ('cfd2109b-63b3-43de-8bb3-682e80c5a965')
              inner join obs o on o.encounter_id = e.encounter_id and o.concept_id in (167161,163556,167530,165138) and o.voided=0
     where e.voided=0
-    group by e.encounter_id
+    group by e.encounter_id;
 
     SELECT "Completed processing MAT psychosocial intake and followup data... ";
 END $$
@@ -10087,7 +10088,7 @@ BEGIN
              inner join form f on f.form_id = e.form_id and f.uuid in ('fa58cbc1-91c8-4920-813b-fde7fd69533b')
              inner join obs o on o.encounter_id = e.encounter_id and o.concept_id in (164075,165066) and o.voided=0
     where e.voided=0
-    group by e.encounter_id
+    group by e.encounter_id;
 
     SELECT "Completed processing MAT cessation data... ";
 END $$

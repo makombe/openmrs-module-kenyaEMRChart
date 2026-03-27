@@ -4818,6 +4818,7 @@ CREATE TABLE kenyaemr_etl.etl_mat_clinical_encounter
     treating_mental_disorder        INT(11)  NOT NULL,
     diagnosed_illnesses        INT(11)  NOT NULL,
     has_disease_type        INT(11)  NOT NULL,
+    treated_disease        INT(11)  NOT NULL,
     buprenorphine_induction        INT(11)  NOT NULL,
     methadone_induction        INT(11)  NOT NULL,
     date_created       DATETIME NOT NULL,
