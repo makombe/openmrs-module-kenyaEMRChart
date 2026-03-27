@@ -11304,6 +11304,244 @@ BEGIN
     SELECT "Completed processing Doctor's progress notes data... ";
 END $$
 
+DROP PROCEDURE IF EXISTS sp_populate_dwapi_etl_mat_intial_registrations $$
+CREATE PROCEDURE sp_populate_dwapi_etl_mat_intial_registrations()
+BEGIN
+SELECT "Processing MAT intial registrations data... ";
+insert into dwapi_etl.etl_mat_intial_registrations(
+    uuid,
+    encounter_provider,
+    patient_id,
+    visit_id,
+    visit_date,
+    location_id,
+    encounter_id,
+    client_type,
+    referral_type,
+    accompanied_by,
+    outreach_worker,
+    service_provider,
+    date_enrolled,
+    date_created,
+    date_last_modified,
+    voided
+)
+select
+    e.uuid,
+    e.creator as encounter_provider,
+    e.patient_id,
+    e.visit_id,
+    e.encounter_datetime as visit_date,
+    e.location_id,
+    e.encounter_id,
+    max(if(o.concept_id = 164181, o.value_coded, "" )) as client_type,
+    max(if(o.concept_id = 166636, o.value_coded, "" )) as referral_type,
+    max(if(o.concept_id = 160112,o.value_coded, "" )) as accompanied_by,
+    max(if(o.concept_id = 160638,o.value_coded, "" )) as outreach_worker,
+    max(if(o.concept_id = 1473,o.value_coded, "" )) as service_provider,
+    max(if(o.concept_id = 163181, o.value_datetime, null))  as date_enrolled,
+    e.date_created as date_created,
+    if(max(o.date_created) > min(e.date_created),max(o.date_created),NULL) as date_last_modified,
+    e.voided
+from encounter e
+         inner join person p on p.person_id=e.patient_id and p.voided=0
+         inner join form f on f.form_id = e.form_id and f.uuid in ('9a9cadd7-fba1-4a24-94aa-43edfbecf8d9')
+         inner join obs o on o.encounter_id = e.encounter_id and o.concept_id in (164181,166636,160112,160638,1473,163181) and o.voided=0
+where e.voided=0
+group by e.encounter_id
+
+SELECT "Completed processing MAT mat intial registrations data... ";
+END $$
+
+DROP PROCEDURE IF EXISTS sp_populate_etl_mat_clinical_encounter $$
+CREATE PROCEDURE sp_populate_etl_mat_clinical_encounter()
+BEGIN
+SELECT "Processing MAT clinical encounter data... ";
+insert into kenyaemr_etl.etl_mat_clinical_encounter(
+    uuid,
+    encounter_provider,
+    patient_id,
+    visit_id,
+    visit_date,
+    location_id,
+    encounter_id,
+    experienced_overdose,
+    disease_name,
+    hepatitis_B_screened,
+    hepatitis_B_treated,
+    hepatitis_C_screened,
+    hepatitis_C_treated,
+    is_suffering_mental_disorder,
+    treating_mental_disorder,
+    diagnosed_illnesses,
+    has_disease_type,
+    buprenorphine_induction,
+    methadone_induction,
+    date_created,
+    date_last_modified,
+    voided
+)
+select
+    e.uuid,
+    e.creator as encounter_provider,
+    e.patient_id,
+    e.visit_id,
+    e.encounter_datetime as visit_date,
+    e.location_id,
+    e.encounter_id,
+    max(if(o.concept_id = 165220, o.value_coded,null )) as experienced_overdose,
+    max(if(o.concept_id = 159926, o.value_coded,null)) as disease_name,
+    max(if(o.concept_id = 165040, o.value_coded,null)) as hepatitis_B_screened,
+    max(if(o.concept_id = 166665, o.value_coded,null)) as hepatitis_B_treated,
+    max(if(o.concept_id = 165041, o.value_coded,null)) as hepatitis_C_screened,
+    max(if(o.concept_id = 165254, o.value_coded,null)) as hepatitis_C_treated,
+    max(if(o.concept_id = 159926, o.value_coded,null)) as is_suffering_mental_disorder,
+    max(if(o.concept_id = 1284, o.value_coded,null)) as treating_mental_disorder,
+    max(if(o.concept_id = 164401, o.value_coded,null)) as diagnosed_illnesses,
+    max(if(o.concept_id = 159926, o.value_coded,null)) as has_disease_type,
+    max(if(o.concept_id = 165248, o.value_text,null)) as treated_disease,
+    max(if(o.concept_id = 167370, o.value_numeric,null)) as buprenorphine_induction,
+    max(if(o.concept_id = 167369, o.value_numeric,null)) as methadone_induction,
+
+    e.date_created as date_created,
+    if(max(o.date_created) > min(e.date_created),max(o.date_created),NULL) as date_last_modified,
+    e.voided
+from encounter e
+         inner join person p on p.person_id=e.patient_id and p.voided=0
+         inner join form f on f.form_id = e.form_id and f.uuid in ('5ed937a0-0933-41c3-b638-63d8a4779845')
+         inner join obs o on o.encounter_id = e.encounter_id and o.concept_id in (165220,159926,165040,166665,
+                                                                                  165041,165254,159926,1284,164401,159926,165248,167370,167369) and o.voided=0
+where e.voided=0
+group by e.encounter_id
+
+SELECT "Completed processing MAT clinical encounter data... ";
+END $$
+
+DROP PROCEDURE IF EXISTS sp_populate_etl_mat_transit $$
+CREATE PROCEDURE sp_populate_etl_mat_transit()
+BEGIN
+SELECT "Processing MAT transit data... ";
+insert into kenyaemr_etl.etl_mat_transit(
+    uuid,
+    encounter_provider,
+    patient_id,
+    visit_id,
+    visit_date,
+    location_id,
+    encounter_id,
+    on_transit,
+    date_created,
+    date_last_modified,
+    voided
+)
+select
+    e.uuid,
+    e.creator as encounter_provider,
+    e.patient_id,
+    e.visit_id,
+    e.encounter_datetime as visit_date,
+    e.location_id,
+    e.encounter_id,
+    max(if(o.concept_id = 1768, o.value_coded,null)) as on_transit,
+    e.date_created as date_created,
+    if(max(o.date_created) > min(e.date_created),max(o.date_created),NULL) as date_last_modified,
+    e.voided
+from encounter e
+         inner join person p on p.person_id=e.patient_id and p.voided=0
+         inner join form f on f.form_id = e.form_id and f.uuid in ('b9495048-eceb-4dd2-bfba-330dc4900ee9')
+         inner join obs o on o.encounter_id = e.encounter_id and o.concept_id in (1768) and o.voided=0
+where e.voided=0
+group by e.encounter_id
+
+SELECT "Completed processing MAT transit data... ";
+END $$
+
+DROP PROCEDURE IF EXISTS sp_populate_etl_mat_psychosocial_intake_and_followup $$
+CREATE PROCEDURE sp_populate_etl_mat_psychosocial_intake_and_followup()
+BEGIN
+SELECT "Processing MAT psychosocial intake and followup... ";
+insert into kenyaemr_etl.etl_mat_psychosocial_intake_and_followup(
+    uuid,
+    encounter_provider,
+    patient_id,
+    visit_id,
+    visit_date,
+    location_id,
+    encounter_id,
+    experienced_gbv,
+    type_of_gbv_experienced,
+    treatment_stage,
+    received_violence_support,
+    date_created,
+    date_last_modified,
+    voided
+)
+select
+    e.uuid,
+    e.creator as encounter_provider,
+    e.patient_id,
+    e.visit_id,
+    e.encounter_datetime as visit_date,
+    e.location_id,
+    e.encounter_id,
+    max(if(o.concept_id = 167161, o.value_coded, null )) as experienced_gbv,
+    max(if(o.concept_id = 163556, o.value_coded, null))  as type_of_gbv_experienced,
+    max(if(o.concept_id = 167530, o.value_coded, null))  as treatment_stage,
+    max(if(o.concept_id = 165138, o.value_text, null))  as received_violence_support,
+    e.date_created as date_created,
+    if(max(o.date_created) > min(e.date_created),max(o.date_created),NULL) as date_last_modified,
+    e.voided
+from encounter e
+         inner join person p on p.person_id=e.patient_id and p.voided=0
+         inner join form f on f.form_id = e.form_id and f.uuid in ('cfd2109b-63b3-43de-8bb3-682e80c5a965')
+         inner join obs o on o.encounter_id = e.encounter_id and o.concept_id in (167161,163556,167530,165138) and o.voided=0
+where e.voided=0
+group by e.encounter_id
+
+SELECT "Completed processing MAT psychosocial intake and followup data... ";
+END $$
+
+DROP PROCEDURE IF EXISTS sp_populate_etl_mat_cessation $$
+CREATE PROCEDURE sp_populate_etl_mat_cessation()
+BEGIN
+SELECT "Processing MAT cessation data... ";
+insert into kenyaemr_etl.etl_mat_cessation(
+    uuid,
+    encounter_provider,
+    patient_id,
+    visit_id,
+    visit_date,
+    location_id,
+    encounter_id,
+    on_methadone_for_past_12_months,
+    weaned_off_methadone,
+    date_created,
+    date_last_modified,
+    voided
+)
+select
+    e.uuid,
+    e.creator as encounter_provider,
+    e.patient_id,
+    e.visit_id,
+    e.encounter_datetime as visit_date,
+    e.location_id,
+    e.encounter_id,
+    max(if(o.concept_id = 164075, o.value_coded, null )) as on_methadone_for_past_12_months,
+    max(if(o.concept_id = 165066, o.value_coded, null )) as weaned_off_methadone,
+    e.date_created as date_created,
+    if(max(o.date_created) > min(e.date_created),max(o.date_created),NULL) as date_last_modified,
+    e.voided
+from encounter e
+         inner join person p on p.person_id=e.patient_id and p.voided=0
+         inner join form f on f.form_id = e.form_id and f.uuid in ('fa58cbc1-91c8-4920-813b-fde7fd69533b')
+         inner join obs o on o.encounter_id = e.encounter_id and o.concept_id in (164075,165066) and o.voided=0
+where e.voided=0
+group by e.encounter_id
+
+SELECT "Completed processing MAT cessation data... ";
+END $$
+
 SET sql_mode=@OLD_SQL_MODE $$
 
 -- ------------------------------------------- running all procedures -----------------------------
@@ -11415,6 +11653,11 @@ CALL sp_populate_etl_atp_disclosure_tracking();
 CALL sp_populate_etl_doctor_progress_note();
 CALL sp_update_next_appointment_date();
 CALL sp_update_dashboard_table();
+CALL sp_populate_etl_mat_intial_registrations();
+CALL sp_populate_etl_mat_clinical_encounter();
+CALL sp_populate_etl_mat_transit();
+CALL sp_populate_etl_mat_psychosocial_intake_and_followup();
+CALL sp_populate_etl_mat_cessation();
 
 UPDATE kenyaemr_etl.etl_script_status SET stop_time=NOW() where id= populate_script_id;
 
