@@ -11304,11 +11304,11 @@ BEGIN
     SELECT "Completed processing Doctor's progress notes data... ";
 END $$
 
-DROP PROCEDURE IF EXISTS sp_populate_dwapi_etl_mat_intial_registrations $$
-CREATE PROCEDURE sp_populate_dwapi_etl_mat_intial_registrations()
+DROP PROCEDURE IF EXISTS sp_populate_etl_mat_intial_registrations $$
+CREATE PROCEDURE sp_populate_etl_mat_intial_registrations()
 BEGIN
 SELECT "Processing MAT intial registrations data... ";
-insert into dwapi_etl.etl_mat_intial_registrations(
+insert into kenyaemr_etl.etl_mat_intial_registrations(
     uuid,
     encounter_provider,
     patient_id,

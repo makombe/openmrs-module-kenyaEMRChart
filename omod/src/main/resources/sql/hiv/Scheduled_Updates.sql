@@ -12601,8 +12601,8 @@ BEGIN
 SELECT "Completed processing Doctor's progress notes data... ";
 END $$
 
-DROP PROCEDURE IF EXISTS sp_update_mat_intial_registrations $$
-CREATE PROCEDURE sp_update_mat_intial_registrations(IN last_update_time DATETIME)
+DROP PROCEDURE IF EXISTS sp_update_etl_mat_intial_registrations $$
+CREATE PROCEDURE sp_update_etl_mat_intial_registrations(IN last_update_time DATETIME)
 BEGIN
 SELECT "Processing MAT intial registrations data... ";
 insert into kenyaemr_etl.etl_mat_intial_registrations(
@@ -12661,8 +12661,8 @@ group by e.encounter_id
 SELECT "Completed processing MAT intial registrations data... ";
 END $$
 
-DROP PROCEDURE IF EXISTS sp_update_mat_clinical_encounter $$
-CREATE PROCEDURE sp_update_mat_clinical_encounter(IN last_update_time DATETIME)
+DROP PROCEDURE IF EXISTS sp_update_etl_mat_clinical_encounter $$
+CREATE PROCEDURE sp_update_etl_mat_clinical_encounter(IN last_update_time DATETIME)
 BEGIN
 SELECT "Processing MAT clinical encounter data... ";
 insert into kenyaemr_etl.etl_mat_clinical_encounter(
@@ -12742,8 +12742,8 @@ group by e.encounter_id
 SELECT "Completed processing MAT clinical encounter registrations data... ";
 END $$
 
-DROP PROCEDURE IF EXISTS sp_update_mat_clinical_encounter $$
-CREATE PROCEDURE sp_update_mat_clinical_encounter(IN last_update_time DATETIME)
+DROP PROCEDURE IF EXISTS sp_update_etl_mat_clinical_encounter $$
+CREATE PROCEDURE sp_update_etl_mat_clinical_encounter(IN last_update_time DATETIME)
 BEGIN
 SELECT "Processing MAT transit data... ";
 insert into kenyaemr_etl.etl_mat_clinical_encounter(
@@ -12788,8 +12788,8 @@ group by e.encounter_id
 SELECT "Completed processing MAT transit data... ";
 END $$
 
-DROP PROCEDURE IF EXISTS sp_update_mat_psychosocial_intake_and_followup $$
-CREATE PROCEDURE sp_update_mat_psychosocial_intake_and_followup(IN last_update_time DATETIME)
+DROP PROCEDURE IF EXISTS sp_update_etl_mat_psychosocial_intake_and_followup $$
+CREATE PROCEDURE sp_update_etl_mat_psychosocial_intake_and_followup(IN last_update_time DATETIME)
 BEGIN
 SELECT "Processing MAT psychosocial intake and followup data... ";
 insert into kenyaemr_etl.etl_mat_psychosocial_intake_and_followup(
@@ -12842,10 +12842,10 @@ group by e.encounter_id
 SELECT "Completed processing MAT psychosocial intake and followup data... ";
 END $$
 
-DROP PROCEDURE IF EXISTS sp_update_mat_cessation $$
-CREATE PROCEDURE sp_update_mat_cessation(IN last_update_time DATETIME)
+DROP PROCEDURE IF EXISTS sp_update_etl_mat_cessation $$
+CREATE PROCEDURE sp_update_etl_mat_cessation(IN last_update_time DATETIME)
 BEGIN
-SELECT "Processing MAT cessationdata... ";
+SELECT "Processing MAT cessation data... ";
 insert into kenyaemr_etl.etl_mat_cessation(
     uuid,
     encounter_provider,
@@ -13000,11 +13000,11 @@ CREATE PROCEDURE sp_scheduled_updates()
     CALL sp_update_etl_inpatient_discharge(last_update_time);
     CALL sp_update_doctor_progress_note(last_update_time);
     CALL sp_update_dashboard_table();
-    CALL sp_update_dwapi_etl_mat_intial_registrations();
-    CALL sp_update_dwapi_etl_mat_clinical_encounter();
-    CALL sp_update_dwapi_etl_mat_transit();
-    CALL sp_update_dwapi_etl_mat_psychosocial_intake_and_followup();
-    CALL sp_update_dwapi_etl_mat_cessation();
+    CALL sp_update_etl_mat_intial_registrations();
+    CALL sp_update_etl_mat_clinical_encounter();
+    CALL sp_update_etl_mat_transit();
+    CALL sp_update_etl_mat_psychosocial_intake_and_followup();
+    CALL sp_update_etl_mat_cessation();
 
 
     UPDATE kenyaemr_etl.etl_script_status SET stop_time=NOW() where  id= update_script_id;
