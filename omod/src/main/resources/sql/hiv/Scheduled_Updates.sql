@@ -211,7 +211,6 @@ DROP PROCEDURE IF EXISTS sp_update_etl_hiv_enrollment $$
 CREATE PROCEDURE sp_update_etl_hiv_enrollment(IN last_update_time DATETIME)
   BEGIN
 
-
     -- update patient_hiv_enrollment table
     -- uuid: de78a6be-bfc5-4634-adc3-5f1a280455cc
 
@@ -299,6 +298,7 @@ CREATE PROCEDURE sp_update_etl_hiv_enrollment(IN last_update_time DATETIME)
         (
           select encounter_type_id, uuid, name from encounter_type where uuid='de78a6be-bfc5-4634-adc3-5f1a280455cc'
         ) et on et.encounter_type_id=e.encounter_type
+        inner join kenyaemr_etl.etl_patient_demographics d on d.patient_id=e.patient_id
         join person p on p.person_id=e.patient_id and p.voided=0
         left outer join obs o on o.encounter_id=e.encounter_id and o.voided=0
                                  and o.concept_id in (160555,160540,160534,160535,161551,159599,160554,160632,160533,160638,160640,160642,160641,164932,160563,5629,1174,1088,161555,164855,164384,1148,1691,165269,1181,5356,5497,159376,1305,162086,163281)
@@ -618,6 +618,7 @@ CREATE PROCEDURE sp_update_etl_hiv_followup(IN last_update_time DATETIME)
         e.voided as voided
       from encounter e
         inner join person p on p.person_id=e.patient_id and p.voided=0
+        inner join kenyaemr_etl.etl_patient_demographics d on d.patient_id=e.patient_id
         inner join
         (
           select encounter_type_id, uuid, name from encounter_type where uuid in ('a0034eee-1940-4e35-847f-97537a35d05e','465a92f2-baf8-42e9-9612-53064be868e8')
@@ -736,6 +737,7 @@ CREATE PROCEDURE sp_update_etl_program_discontinuation(IN last_update_time DATET
         if(max(o.date_created) > min(e.date_created),max(o.date_created),NULL) as date_last_modified
       from encounter e
         inner join person p on p.person_id=e.patient_id and p.voided=0
+        inner join kenyaemr_etl.etl_patient_demographics d on d.patient_id=e.patient_id
         inner join obs o on o.encounter_id=e.encounter_id and o.voided=0 and o.concept_id in (161555,159786,159787,164384,1543,159495,160649,165380,1285,164133,1599,1748,162580,160218)
         inner join
         (
@@ -859,6 +861,7 @@ CREATE PROCEDURE sp_update_etl_mch_enrollment(IN last_update_time DATETIME)
         if(max(o.date_created) > min(e.date_created),max(o.date_created),NULL) as date_last_modified
       from encounter e
         inner join person p on p.person_id=e.patient_id and p.voided=0
+        inner join kenyaemr_etl.etl_patient_demographics d on d.patient_id=e.patient_id
         inner join obs o on e.encounter_id = o.encounter_id and o.voided =0
                             and o.concept_id in(163530,163547,5624,160080,1823,160598,1427,162095,5596,300,299,160108,32,159427,160554,1436,160082,159599,164855,162724,56,1875,159734,161438,161439,161440,161441,161442,161444,161443,162106,162101,162096,161555,160478)
         inner join
@@ -1138,6 +1141,7 @@ CREATE PROCEDURE sp_update_etl_mch_antenatal_visit(IN last_update_time DATETIME)
         if(max(o.date_created) > min(e.date_created),max(o.date_created),NULL) as date_last_modified
       from encounter e
         inner join person p on p.person_id=e.patient_id and p.voided=0
+        inner join kenyaemr_etl.etl_patient_demographics d on d.patient_id=e.patient_id
         inner join obs o on e.encounter_id = o.encounter_id and o.voided =0
                             and o.concept_id in(1282,159922,984,1418,1425,5088,5087,5085,5086,5242,5092,5089,5090,1343,21,163590,5245,1438,1439,160090,162089,1440,162107,5356,5497,856,1305,1147,159427,164848,161557,1436,1109,5576,128256,1875,159734,
                                                 161438,161439,161440,161441,161442,161444,161443,162106,162101,162096,299,159918,32,119481,165099,120198,374,161074,1659,164934,163589,165040,166665,162747,1912,160481,163145,5096,159395,163784,1271,159853,
@@ -1322,6 +1326,7 @@ CREATE PROCEDURE sp_update_etl_mch_delivery(IN last_update_time DATETIME)
 
       from encounter e
         inner join person p on p.person_id=e.patient_id and p.voided=0
+        inner join kenyaemr_etl.etl_patient_demographics d on d.patient_id=e.patient_id
         inner join obs o on e.encounter_id = o.encounter_id and o.voided =0
 
                             and o.concept_id in(162054,1590,160704,1282,159369,984,161094,1396,161930,163783,166665,299,1427,5596,164359,1789,5630,5599,161928,1856,159603,159604,159605,162131,1572,1473,1379,1151,163454,1602,1573,162093,1576,120216,159616,1587,159917,1282,5916,161543,164122,159521,159427,164848,161557,1436,1109,5576,159595,163784,159395,168751,1284,113316,165647,113602,163445,159949,1570)
@@ -1396,6 +1401,7 @@ CREATE PROCEDURE sp_update_etl_mch_discharge(IN last_update_time DATETIME)
         max(if(o.concept_id=159395,o.value_text,null)) as clinical_notes
       from encounter e
         inner join person p on p.person_id=e.patient_id and p.voided=0
+        inner join kenyaemr_etl.etl_patient_demographics d on d.patient_id=e.patient_id
         inner join obs o on e.encounter_id = o.encounter_id and o.voided =0
                             and o.concept_id in(161651,159926,161534,162051,162093,1641,160481,163145,159395)
         inner join
@@ -1597,6 +1603,7 @@ CREATE PROCEDURE sp_update_etl_mch_postnatal_visit(IN last_update_time DATETIME)
         if(max(o.date_created) > min(e.date_created),max(o.date_created),NULL) as date_last_modified
       from encounter e
         inner join person p on p.person_id=e.patient_id and p.voided=0
+        inner join kenyaemr_etl.etl_patient_demographics d on d.patient_id=e.patient_id
         inner join obs o on e.encounter_id = o.encounter_id and o.voided =0
                             and o.concept_id in(1646,159893,5599,5630,1572,5088,5087,5085,5086,5242,5092,5089,5090,1343,21,1147,1856,159780,162128,162110,159840,159844,5245,230,1396,162134,1151,162121,162127,1382,163742,160968,160969,160970,160971,160975,160972,159427,164848,161557,1436,1109,5576,159595,163784,1282,161074,160085,161004,159921,164934,163589,160653,374,160338,163145,159395,159949,5096,161651,165070,
                                                 1724,167017,163783,162642,166665,165218,160632,299,159395,164181)
@@ -1739,6 +1746,7 @@ CREATE PROCEDURE sp_update_etl_hei_enrolment(IN last_update_time DATETIME)
         if(max(o.date_created) > min(e.date_created),max(o.date_created),NULL) as date_last_modified
       from encounter e
         inner join person p on p.person_id=e.patient_id and p.voided=0
+        inner join kenyaemr_etl.etl_patient_demographics d on d.patient_id=e.patient_id
         inner join obs o on e.encounter_id = o.encounter_id and o.voided =0
                             and o.concept_id in(5303,162054,5916,1409,162140,162051,162052,161630,161601,160540,160563,160534,160535,161551,160555,1282,159941,1282,152460,160429,1148,1086,162055,1088,1282,162053,5630,1572,161555,159427,1503,163460,162724,164130,164129,164140,1646,160753,161555,159427,159949)
         inner join
@@ -1898,6 +1906,7 @@ CREATE PROCEDURE sp_update_etl_hei_follow_up(IN last_update_time DATETIME)
         if(max(o.date_created) > min(e.date_created),max(o.date_created),NULL) as date_last_modified
       from encounter e
         inner join person p on p.person_id=e.patient_id and p.voided=0
+        inner join kenyaemr_etl.etl_patient_demographics d on d.patient_id=e.patient_id
         inner join obs o on e.encounter_id = o.encounter_id and o.voided =0
                             and o.concept_id in(844,5089,5090,160640,1151,1659,5096,162069,162069,162069,162069,162069,162069,162069,162069,1189,159951,966,1109,162084,1030,162086,160082,159951,1040,162086,160082,159951,1326,162086,160082,162077,162064,162067,162066,1282,1443,1621,159395,5096,160908,1854,164088,1193,161534,162558,160481,163145,1379,5484,159855,159402,164181,164088,1788,164359,159860)
         inner join
@@ -2058,6 +2067,7 @@ CREATE PROCEDURE sp_update_etl_hei_immunization(IN last_update_time DATETIME)
                       from obs o
                         inner join encounter e on e.encounter_id=o.encounter_id
                         inner join person p on p.person_id=o.person_id and p.voided=0
+                        inner join kenyaemr_etl.etl_patient_demographics d on d.patient_id=e.patient_id
                         inner join
                         (
                           select encounter_type_id, uuid, name from encounter_type where
@@ -2169,6 +2179,7 @@ CREATE PROCEDURE sp_update_etl_tb_enrollment(IN last_update_time DATETIME)
 
       from encounter e
         inner join person p on p.person_id=e.patient_id and p.voided=0
+        inner join kenyaemr_etl.etl_patient_demographics d on d.patient_id=e.patient_id
         inner join obs o on e.encounter_id = o.encounter_id and o.voided =0
                             and o.concept_id in(160540,161561,160534,160535,161551,161552,5089,5090,160638,160640,160641,160642,160040,159871,159982,161356)
         inner join
@@ -2196,9 +2207,6 @@ CREATE PROCEDURE sp_update_etl_tb_enrollment(IN last_update_time DATETIME)
 DROP PROCEDURE IF EXISTS sp_update_etl_tb_follow_up_visit $$
 CREATE PROCEDURE sp_update_etl_tb_follow_up_visit(IN last_update_time DATETIME)
   BEGIN
-
-
-
     insert into kenyaemr_etl.etl_tb_follow_up_visit(
       patient_id,
       uuid,
@@ -2256,6 +2264,7 @@ CREATE PROCEDURE sp_update_etl_tb_follow_up_visit(IN last_update_time DATETIME)
         if(max(o.date_created) > min(e.date_created),max(o.date_created),NULL) as date_last_modified
       from encounter e
         inner join person p on p.person_id=e.patient_id and p.voided=0
+        inner join kenyaemr_etl.etl_patient_demographics d on d.patient_id=e.patient_id
         inner join obs o on e.encounter_id = o.encounter_id and o.voided =0
                             and o.concept_id in(159961,307,159968,160023,159964,159982,159952,159956,159958,159964,1169,5096)
         inner join
@@ -2343,6 +2352,7 @@ CREATE PROCEDURE sp_update_etl_tb_screening(IN last_update_time DATETIME)
         if(max(o.date_created) > min(e.date_created),max(o.date_created),NULL) as date_last_modified
       from encounter e
         inner join person p on p.person_id=e.patient_id and p.voided=0
+        inner join kenyaemr_etl.etl_patient_demographics d on d.patient_id=e.patient_id
         inner join form f on f.form_id=e.form_id and f.uuid in ("22c68f86-bbf0-49ba-b2d1-23fa7ccf0259", "59ed8e62-7f1f-40ae-a2e3-eabe350277ce","23b4ebbd-29ad-455e-be0e-04aa6bc30798","72aa78e0-ee4b-47c3-9073-26f3b9ecc4a7")
         inner join obs o on o.encounter_id = e.encounter_id and o.concept_id in (1659, 1113, 160632,161643,1729,1271,307,12,162202,1272,163752,163414,162275,162309,1109) and o.voided=0
       where e.date_changed >= last_update_time
@@ -2523,9 +2533,9 @@ CREATE PROCEDURE sp_update_drug_event(IN last_update_time DATETIME)
         max(if(o.concept_id=5622,o.value_text,null)) as reason_discontinued_other,
         e.date_created as date_created,
         if(max(o.date_created) > min(e.date_created),max(o.date_created),NULL) as date_last_modified
-
       from encounter e
         inner join person p on p.person_id=e.patient_id and p.voided=0
+        inner join kenyaemr_etl.etl_patient_demographics d on d.patient_id=e.patient_id
         inner join obs o on e.encounter_id = o.encounter_id and o.voided =0
                             and o.concept_id in(1193,1252,5622,1191,1255,1268,163104)
         inner join
@@ -2597,6 +2607,7 @@ CREATE PROCEDURE sp_update_etl_pharmacy_extract(IN last_update_time DATETIME)
       from obs o
         left outer join encounter e on e.encounter_id = o.encounter_id and e.voided=0
         inner join person p on p.person_id=e.patient_id and p.voided=0
+        inner join kenyaemr_etl.etl_patient_demographics d on d.patient_id=e.patient_id
         left outer join encounter_type et on et.encounter_type_id = e.encounter_type
         left outer join concept_name cn on o.value_coded = cn.concept_id and cn.locale='en' and cn.concept_name_type='FULLY_SPECIFIED' -- SHORT'
         left outer join concept_set cs on o.value_coded = cs.concept_id
@@ -2748,6 +2759,7 @@ CREATE PROCEDURE sp_update_etl_laboratory_extract(IN last_update_time DATETIME)
       FROM encounter e
                INNER JOIN FilteredOrders o ON o.encounter_id = e.encounter_id
                INNER JOIN person p ON p.person_id = e.patient_id AND p.voided = 0
+               inner join kenyaemr_etl.etl_patient_demographics d on d.patient_id=e.patient_id
                LEFT JOIN LabOrderConcepts lc ON o.concept_id = lc.member_concept_id
                LEFT JOIN LabOrderResults lor ON o.order_id = lor.order_id
       where e.date_created >= last_update_time
@@ -2901,6 +2913,7 @@ CREATE PROCEDURE sp_update_hts_test(IN last_update_time DATETIME)
         e.voided
       from encounter e
         inner join person p on p.person_id=e.patient_id and p.voided=0
+        inner join kenyaemr_etl.etl_patient_demographics d on d.patient_id=e.patient_id
         inner join form f on f.form_id=e.form_id and f.uuid in ("402dc5d7-46da-42d4-b2be-f43ea4ad87b0","b08471f6-0892-4bf7-ab2b-bf79797b8ea4")
         inner join obs o on o.encounter_id = e.encounter_id and o.voided=0 and o.concept_id in (162084, 164930, 160581, 164401, 164951, 162558,160632, 1710, 164959, 164956,165241,
                                                                                                         159427, 164848, 6096, 1659, 164952, 163042, 159813,165215,163556,161550,1887,1272,164359,160481,299,167163,167162,165093) and o.voided=0
@@ -3003,6 +3016,7 @@ CREATE PROCEDURE sp_update_hts_linkage_and_referral(IN last_update_time DATETIME
         e.voided
       from encounter e
         inner join person p on p.person_id=e.patient_id and p.voided=0
+        inner join kenyaemr_etl.etl_patient_demographics d on d.patient_id=e.patient_id
         inner join form f on f.form_id = e.form_id and f.uuid in ("050a7f12-5c52-4cad-8834-863695af335d","15ed03d2-c972-11e9-a32f-2a2ae2dbcce4")
         left outer join obs o on o.encounter_id = e.encounter_id and o.concept_id in (164966, 159811, 162724, 160555, 159599, 162053, 1473,162577,160481,163042) and o.voided=0
       where e.date_created >= last_update_time
@@ -3098,6 +3112,7 @@ CREATE PROCEDURE sp_update_hts_referral(IN last_update_time DATETIME)
         e.voided voided
       from encounter e
         inner join person p on p.person_id=e.patient_id and p.voided=0
+        inner join kenyaemr_etl.etl_patient_demographics d on d.patient_id=e.patient_id
         inner join form f on f.form_id = e.form_id and f.uuid = "9284828e-ce55-11e9-a32f-2a2ae2dbcce4"
         left outer join obs o on o.encounter_id = e.encounter_id and o.concept_id in (161550, 161561, 163042) and o.voided=0
       where e.date_created >= last_update_time
@@ -3137,6 +3152,7 @@ CREATE PROCEDURE sp_update_etl_ipt_screening(IN last_update_time DATETIME)
         if(max(o.date_created) > min(e.date_created),max(o.date_created),NULL) as date_last_modified
       from encounter e
         inner join person p on p.person_id=e.patient_id and p.voided=0
+        inner join kenyaemr_etl.etl_patient_demographics d on d.patient_id=e.patient_id
         inner join form f on f.form_id=e.form_id and f.uuid in ("22c68f86-bbf0-49ba-b2d1-23fa7ccf0259", "59ed8e62-7f1f-40ae-a2e3-eabe350277ce")
         inner join obs o on o.encounter_id = e.encounter_id and o.concept_id=1265 and o.voided=0
       where e.date_changed >= last_update_time
@@ -3191,6 +3207,7 @@ CREATE PROCEDURE sp_update_etl_ipt_follow_up(IN last_update_time DATETIME)
         e.voided
       from encounter e
         inner join person p on p.person_id=e.patient_id and p.voided=0
+        inner join kenyaemr_etl.etl_patient_demographics d on d.patient_id=e.patient_id
         inner join
         (
           select encounter_type_id, uuid, name from encounter_type where uuid in('aadeafbe-a3b1-4c57-bc76-8461b778ebd6')
@@ -3261,6 +3278,7 @@ CREATE PROCEDURE sp_update_etl_ccc_defaulter_tracing(IN last_update_time DATETIM
         if(max(o.date_created) > min(e.date_created),max(o.date_created),NULL) as date_last_modified
       from encounter e
         inner join person p on p.person_id=e.patient_id and p.voided=0
+        inner join kenyaemr_etl.etl_patient_demographics d on d.patient_id=e.patient_id
         inner join form f on f.form_id=e.form_id and f.uuid in ("a1a62d1e-2def-11e9-b210-d663bd873d93")
         inner join obs o on o.encounter_id = e.encounter_id and o.concept_id in (164966,164093, 1801, 163513, 160721, 1639, 163725, 160433, 1599, 160716,163526,166541) and o.voided=0
       where e.date_created >= last_update_time
@@ -3339,6 +3357,7 @@ CREATE PROCEDURE sp_update_etl_ART_preparation(IN last_update_time DATETIME)
         if(max(o.date_created) > min(e.date_created),max(o.date_created),NULL) as date_last_modified
       from encounter e
         inner join person p on p.person_id=e.patient_id and p.voided=0
+        inner join kenyaemr_etl.etl_patient_demographics d on d.patient_id=e.patient_id
         inner join obs o on e.encounter_id = o.encounter_id and o.voided =0
                             and o.concept_id in (1729,160246,159891,1048,164425,121764,5619,159707,163089,162695,160119,164886,163766,163164,164360)
         inner join
@@ -3478,6 +3497,7 @@ CREATE PROCEDURE sp_update_etl_enhanced_adherence(IN last_update_time DATETIME)
         if(max(o.date_created) > min(e.date_created),max(o.date_created),NULL) as date_last_modified
       from encounter e
         inner join person p on p.person_id=e.patient_id and p.voided=0
+        inner join kenyaemr_etl.etl_patient_demographics d on d.patient_id=e.patient_id
         inner join obs o on e.encounter_id = o.encounter_id and o.voided =0
                             and o.concept_id in(1639,164891,162846,1658,164848,163310,164981,164982,160632,164983,164984,164985,164986,164987,164988,164989,164990,164991,164992,164993,164994,164995,164996,164997,164998,1898,160110,163108,1272,164999,165000,165001,165002,5096,167321,163088,6098,164998,162736,1743,1779,166365)
 
@@ -3578,6 +3598,7 @@ CREATE PROCEDURE sp_update_etl_patient_triage(IN last_update_time DATETIME)
         e.voided as voided
       from encounter e
         inner join person p on p.person_id=e.patient_id and p.voided=0
+        inner join kenyaemr_etl.etl_patient_demographics d on d.patient_id=e.patient_id
         inner join
         (
           select encounter_type_id, uuid, name from encounter_type where uuid = 'd1059fb9-a079-4feb-a749-eedd709ae542'
@@ -3643,6 +3664,7 @@ CREATE PROCEDURE sp_update_etl_generalized_anxiety_disorder(IN last_update_time 
 
       from encounter e
         inner join person p on p.person_id=e.patient_id and p.voided=0
+        inner join kenyaemr_etl.etl_patient_demographics d on d.patient_id=e.patient_id
         inner join form f on f.form_id=e.form_id and f.uuid in ("524d078e-936a-4543-9ca6-7a8d9ed4db06")
         inner join obs o on o.encounter_id = e.encounter_id and o.concept_id in (167003,167005,166482,167064,167065,167066,167067,167267) and o.voided=0
       where e.voided=0 and e.date_created >= last_update_time
@@ -3768,6 +3790,7 @@ CREATE PROCEDURE sp_update_etl_prep_behaviour_risk_assessment(IN last_update_tim
 
       from encounter e
         inner join person p on p.person_id=e.patient_id and p.voided=0
+        inner join kenyaemr_etl.etl_patient_demographics d on d.patient_id=e.patient_id
         inner join form f on f.form_id=e.form_id and f.uuid in ("40374909-05fc-4af8-b789-ed9c394ac785")
         inner join obs o on o.encounter_id = e.encounter_id and o.concept_id in (1436,160119,163310,160581,159385,160579,156660,164845,165088,165089,165090,165241,160632,165091,165053,165092,165094,1743,161595,161011,165093,161550,160082,165095,162053,159599,165096,1825,164393,165356,374) and o.voided=0
       where e.voided=0 and e.date_created >= last_update_time
@@ -3885,6 +3908,7 @@ CREATE PROCEDURE sp_update_etl_prep_monthly_refill(IN last_update_time DATETIME)
                 e.voided as voided
       from encounter e
         inner join person p on p.person_id=e.patient_id and p.voided=0
+        inner join kenyaemr_etl.etl_patient_demographics d on d.patient_id=e.patient_id
         inner join form f on f.form_id=e.form_id and f.uuid in ("291c03c8-a216-11e9-a2a3-2a2ae2dbcce4")
         inner join obs o on o.encounter_id = e.encounter_id and o.concept_id in (1169,162189,164075,160582,165144,166866,167788,160632,164425,161641,1417,164515,164433,161555,164999,161011,5096,138643,165055,166535) and o.voided=0
       where e.voided=0 and e.date_created >= last_update_time
@@ -3963,6 +3987,7 @@ CREATE PROCEDURE sp_update_etl_prep_discontinuation(IN last_update_time DATETIME
         e.voided
       from encounter e
         inner join person p on p.person_id=e.patient_id and p.voided=0
+        inner join kenyaemr_etl.etl_patient_demographics d on d.patient_id=e.patient_id
         inner join form f on f.form_id=e.form_id and f.uuid in ("467c4cc3-25eb-4330-9cf6-e41b9b14cc10")
         inner join obs o on o.encounter_id = e.encounter_id and o.concept_id in (161555,164073,162549) and o.voided=0
       where e.voided=0 and e.date_created >= last_update_time
@@ -4045,6 +4070,7 @@ CREATE PROCEDURE sp_update_etl_prep_enrolment(IN last_update_time DATETIME)
 
       from encounter e
         inner join person p on p.person_id=e.patient_id and p.voided=0
+        inner join kenyaemr_etl.etl_patient_demographics d on d.patient_id=e.patient_id
         inner join form f on f.form_id=e.form_id and f.uuid in ("d5ca78be-654e-4d23-836e-a934739be555")
         inner join obs o on o.encounter_id = e.encounter_id and o.concept_id in (164932,160540,162724,161550,160534,160535,160555,159599,160533,1088,162881,5629,166866,160638,165038,160640,160642,160641,164930,160581,166535) and o.voided=0
       where e.voided=0 and e.date_created >= last_update_time
@@ -4227,6 +4253,7 @@ CREATE PROCEDURE sp_update_etl_prep_followup(IN last_update_time DATETIME)
         e.voided
       from encounter e
         inner join person p on p.person_id=e.patient_id and p.voided=0
+        inner join kenyaemr_etl.etl_patient_demographics d on d.patient_id=e.patient_id
         inner join form f on f.form_id=e.form_id and f.uuid in ("ee3e2017-52c0-4a54-99ab-ebb542fb8984","1bfb09fc-56d7-4108-bd59-b2765fd312b8")
         inner join obs o on o.encounter_id = e.encounter_id and o.concept_id in (161558,165098,165200,165308,165099,1272,1472,5272,5596,1426,164933,5632,160653,374,159623,
                                                                                                                                                     165103,167788,165144,166866,161033,1596,164122,162747,1284,159948,1282,1443,1444,160855,159368,1732,121764,1193,159935,162760,1255,160557,160643,159935,162760,160753,165101,165104,165106,
@@ -4323,6 +4350,7 @@ CREATE PROCEDURE sp_update_etl_progress_note(IN last_update_time DATETIME)
         e.voided
       from encounter e
         inner join person p on p.person_id=e.patient_id and p.voided=0
+        inner join kenyaemr_etl.etl_patient_demographics d on d.patient_id=e.patient_id
         inner join form f on f.form_id=e.form_id and f.uuid in ("c48ed2a2-0a0f-4f4e-9fed-a79ca3e1a9b9")
         inner join obs o on o.encounter_id = e.encounter_id and o.concept_id in (159395) and o.voided=0
       where e.voided=0 and e.date_created >= last_update_time
@@ -4369,6 +4397,7 @@ CREATE PROCEDURE sp_update_etl_ipt_initiation(IN last_update_time DATETIME)
         e.voided
       from encounter e
         inner join person p on p.person_id=e.patient_id and p.voided=0
+        inner join kenyaemr_etl.etl_patient_demographics d on d.patient_id=e.patient_id
         inner join obs o on e.encounter_id = o.encounter_id and o.voided =0 and o.concept_id=162276
         inner join
         (
@@ -4476,6 +4505,7 @@ CREATE PROCEDURE sp_update_etl_ipt_outcome(IN last_update_time DATETIME)
         e.voided voided
       from encounter e
         inner join person p on p.person_id=e.patient_id and p.voided=0
+        inner join kenyaemr_etl.etl_patient_demographics d on d.patient_id=e.patient_id
         inner join obs o on e.encounter_id = o.encounter_id and o.voided =0 and o.concept_id=161555
         inner join
         (
@@ -4528,6 +4558,7 @@ CREATE PROCEDURE sp_update_etl_hts_linkage_tracing(IN last_update_time DATETIME)
         e.voided as voided
       from encounter e
         inner join person p on p.person_id=e.patient_id and p.voided=0
+        inner join kenyaemr_etl.etl_patient_demographics d on d.patient_id=e.patient_id
         inner join
         (
           select form_id, uuid,name from form where
@@ -4596,6 +4627,7 @@ CREATE PROCEDURE sp_update_etl_otz_enrollment(IN last_update_time DATETIME)
         e.voided as voided
       from encounter e
         inner join person p on p.person_id=e.patient_id and p.voided=0
+        inner join kenyaemr_etl.etl_patient_demographics d on d.patient_id=e.patient_id
         inner join
         (
           select form_id, uuid,name from form where
@@ -4668,6 +4700,7 @@ CREATE PROCEDURE sp_update_etl_otz_activity(IN last_update_time DATETIME)
         e.voided as voided
       from encounter e
         inner join person p on p.person_id=e.patient_id and p.voided=0
+        inner join kenyaemr_etl.etl_patient_demographics d on d.patient_id=e.patient_id
         inner join
         (
           select form_id, uuid,name from form where
@@ -4740,6 +4773,7 @@ CREATE PROCEDURE sp_update_etl_ovc_enrolment(IN last_update_time DATETIME)
         e.voided as voided
       from encounter e
         inner join person p on p.person_id=e.patient_id and p.voided=0
+        inner join kenyaemr_etl.etl_patient_demographics d on d.patient_id=e.patient_id
         inner join
         (
           select form_id, uuid,name from form where
@@ -5546,6 +5580,7 @@ CREATE PROCEDURE sp_update_etl_kp_contact(IN last_update_time DATETIME)
         e.voided
       from encounter e
         inner join person p on p.person_id=e.patient_id and p.voided=0
+        inner join kenyaemr_etl.etl_patient_demographics d on d.patient_id=e.patient_id
         inner join
         (
           select encounter_type_id, uuid, name from encounter_type where uuid='ea68aad6-4655-4dc5-80f2-780e33055a9e'
@@ -5652,6 +5687,7 @@ CREATE PROCEDURE sp_update_etl_kp_client_enrollment(IN last_update_time DATETIME
         e.voided
       from encounter e
         inner join person p on p.person_id=e.patient_id and p.voided=0
+        inner join kenyaemr_etl.etl_patient_demographics d on d.patient_id=e.patient_id
         inner join
         (
           select encounter_type_id, uuid, name from encounter_type where uuid='c7f47a56-207b-11e9-ab14-d663bd873d93'
@@ -5985,6 +6021,7 @@ CREATE PROCEDURE sp_update_etl_kp_clinical_visit(IN last_update_time DATETIME)
         e.voided as voided
       from encounter e
         inner join person p on p.person_id=e.patient_id and p.voided=0
+        inner join kenyaemr_etl.etl_patient_demographics d on d.patient_id=e.patient_id
         inner join
         (
           select encounter_type_id, uuid, name from encounter_type where uuid in('92e03f22-9686-11e9-bc42-526af7764f64')
@@ -6206,6 +6243,7 @@ CREATE PROCEDURE sp_update_etl_kp_sti_treatment(IN last_update_time DATETIME)
         e.voided as voided
       from encounter e
         inner join person p on p.person_id=e.patient_id and p.voided=0
+        inner join kenyaemr_etl.etl_patient_demographics d on d.patient_id=e.patient_id
         inner join
         (
           select encounter_type_id, uuid, name from encounter_type where uuid in('2cc8c535-bbfa-4668-98c7-b12e3550ee7b')
@@ -6323,6 +6361,7 @@ CREATE PROCEDURE sp_update_etl_kp_peer_calendar(IN last_update_time DATETIME)
         e.voided as voided
       from encounter e
         inner join person p on p.person_id=e.patient_id and p.voided=0
+        inner join kenyaemr_etl.etl_patient_demographics d on d.patient_id=e.patient_id
         inner join
         (
           select encounter_type_id, uuid, name from encounter_type where uuid in('c4f9db39-2c18-49a6-bf9b-b243d673c64d')
@@ -6417,6 +6456,7 @@ CREATE PROCEDURE sp_update_etl_kp_peer_tracking(IN last_update_time DATETIME)
         e.voided as voided
       from encounter e
         inner join person p on p.person_id=e.patient_id and p.voided=0
+        inner join kenyaemr_etl.etl_patient_demographics d on d.patient_id=e.patient_id
         inner join form f on f.form_id=e.form_id and f.uuid in ('63917c60-3fea-11e9-b210-d663bd873d93')
         inner join obs o on o.encounter_id = e.encounter_id and o.concept_id in (165004,165071,1639,160753,164966,160721,163725,160433,160716,161641,162568,160632) and o.voided=0
       where e.voided=0 and e.date_created >= last_update_time
@@ -6547,6 +6587,7 @@ CREATE PROCEDURE sp_update_etl_kp_treatment_verification(IN last_update_time DAT
         e.voided as voided
       from encounter e
         inner join person p on p.person_id=e.patient_id and p.voided=0
+        inner join kenyaemr_etl.etl_patient_demographics d on d.patient_id=e.patient_id
         inner join form f on f.form_id=e.form_id and f.uuid in ('a70a1132-75b3-11ea-bc55-0242ac130003')
         inner join obs o on o.encounter_id = e.encounter_id and o.concept_id in (159948,162724,162053,1768,
                                                                                                 159599,164515,162568,657,5497,163281,160632,163524,5616,5497,160716,161641,162568,163101,162320,162279,164947,
@@ -6687,6 +6728,7 @@ CREATE PROCEDURE sp_update_etl_gender_based_violence(IN last_update_time DATETIM
         e.voided as voided
       from encounter e
         inner join person p on p.person_id=e.patient_id and p.voided=0
+        inner join kenyaemr_etl.etl_patient_demographics d on d.patient_id=e.patient_id
         inner join form f on f.form_id=e.form_id and f.uuid in ('94eec122-83a1-11ea-bc55-0242ac130003')
         inner join obs o on o.encounter_id = e.encounter_id and o.concept_id in (160658,159449,165230,160658,164352,162871,162886,160753,162875,6098) and o.voided=0
       where e.voided=0 and e.date_created >= last_update_time
@@ -6772,6 +6814,7 @@ CREATE PROCEDURE sp_update_etl_PrEP_verification(IN last_update_time DATETIME)
                 e.voided as voided
       from encounter e
         inner join person p on p.person_id=e.patient_id and p.voided=0
+        inner join kenyaemr_etl.etl_patient_demographics d on d.patient_id=e.patient_id
         inner join form f on f.form_id=e.form_id and f.uuid in ("5c64e61a-7fdc-11ea-bc55-0242ac130003")
         inner join obs o on o.encounter_id = e.encounter_id and o.concept_id in (163526,162724,1768,160555,164515,162568,162079,165109,161555,165230,5096) and o.voided=0
       where e.voided=0 and e.date_created >= last_update_time
@@ -6826,6 +6869,7 @@ CREATE PROCEDURE sp_update_etl_PrEP_verification(IN last_update_time DATETIME)
     e.voided as voided
     from encounter e
       inner join person p on p.person_id=e.patient_id and p.voided=0
+      inner join kenyaemr_etl.etl_patient_demographics d on d.patient_id=e.patient_id
       inner join form f on f.form_id=e.form_id and f.uuid in ('7b1ec2d5-a4ad-4ffc-a0d3-ff1ea68e293c')
     inner join obs o on o.encounter_id = e.encounter_id and o.concept_id in (159449, 163201, 112603) and o.voided=0
     where e.voided=0 and e.date_created >= last_update_time
@@ -6876,6 +6920,7 @@ CREATE PROCEDURE sp_update_etl_PrEP_verification(IN last_update_time DATETIME)
         e.voided as voided
     from encounter e
              inner join person p on p.person_id=e.patient_id and p.voided=0
+             inner join kenyaemr_etl.etl_patient_demographics d on d.patient_id=e.patient_id
              inner join form f on f.form_id=e.form_id and f.uuid in ('03767614-1384-4ce3-aea9-27e2f4e67d01','94eec122-83a1-11ea-bc55-0242ac130003')
              inner join obs o on o.encounter_id = e.encounter_id and o.concept_id in (160658,165116,165117,165034,165070,165045,141814)
         and o.voided=0
@@ -6928,6 +6973,7 @@ select
        e.voided as voided
 from encounter e
        inner join person p on p.person_id=e.patient_id and p.voided=0
+       inner join kenyaemr_etl.etl_patient_demographics d on d.patient_id=e.patient_id
        inner join form f on f.form_id=e.form_id and f.uuid in ('03767614-1384-4ce3-aea9-27e2f4e67d01','94eec122-83a1-11ea-bc55-0242ac130003')
        inner join (select o.encounter_id as encounter_id,o.person_id, o.obs_id,o1.obs_id as id,o.concept_id as obs_group,o1.concept_id as concept_id, o1.value_coded as value_coded,o1.value_datetime as value_datetime,o1.date_created,o1.voided
                    from obs o join obs o1 on o.obs_id = o1.obs_group_id and o1.concept_id in (162871,162886,162875,6098,160753) and o.concept_id in(1562,159639,1743))o on o.encounter_id = e.encounter_id and o.voided=0
@@ -7064,6 +7110,7 @@ select
         e.voided as voided
 from encounter e
          inner join person p on p.person_id=e.patient_id and p.voided=0
+         inner join kenyaemr_etl.etl_patient_demographics d on d.patient_id=e.patient_id
          inner join form f on f.form_id=e.form_id and f.uuid in ('10cd2ca0-8d25-4876-b97c-b568a912957e')
              inner join obs o on o.encounter_id = e.encounter_id and o.concept_id in (162725,160753,161244,165164,165228,165229,165206,165349,165225,159368,165165,165166,165167,165168,165169,165170,165171,165190,165172,165173,165174,165175,165176,165178,165177,163108,165181,165182,165183,165184,165187,165188,165189,164378,165224) and o.voided=0
             where e.voided=0
@@ -7201,6 +7248,7 @@ select
        e.voided as voided
 from encounter e
          inner join person p on p.person_id=e.patient_id and p.voided=0
+         inner join kenyaemr_etl.etl_patient_demographics d on d.patient_id=e.patient_id
          inner join form f on f.form_id=e.form_id and f.uuid in ('052ede51-ddda-4f04-aa25-754ff40abf37')
          inner join obs o on o.encounter_id = e.encounter_id and o.concept_id in (167992,160632,165137,162724,162053,159948,159599,164855,164432,164516,162725,164093,162078,163281,165236,856,5096,165163,164999,163532,5599,166663,166665,165184,165086,160653,162309,1113,162230,162320,162568) and o.voided=0
 where e.voided=0 and e.date_created >= last_update_time
@@ -7303,6 +7351,7 @@ select
        e.voided as voided
 from encounter e
        inner join person p on p.person_id=e.patient_id and p.voided=0
+       inner join kenyaemr_etl.etl_patient_demographics d on d.patient_id=e.patient_id
        inner join form f on f.form_id=e.form_id and f.uuid in ('5fe533ee-0c40-4a1f-a071-dc4d0fbb0c17')
 inner join obs o on o.encounter_id = e.encounter_id and o.concept_id in (167006,167007,167068,167069,167070,167071,167072,167073,167074,165110,165302,166656,166636,162724,168146) and o.voided=0
 where e.voided=0 and e.date_created >= last_update_time
@@ -7362,6 +7411,7 @@ select
        e.voided as voided
 from encounter e
        inner join person p on p.person_id=e.patient_id and p.voided=0
+       inner join kenyaemr_etl.etl_patient_demographics d on d.patient_id=e.patient_id
        inner join form f on f.form_id=e.form_id and f.retired=0
        inner join (
                     select encounter_type_id, uuid, name from encounter_type where uuid in('a0034eee-1940-4e35-847f-97537a35d05e',
@@ -7441,6 +7491,7 @@ select
    e.voided as voided
 from encounter e
    inner join person p on p.person_id=e.patient_id and p.voided=0
+   inner join kenyaemr_etl.etl_patient_demographics d on d.patient_id=e.patient_id
    inner join (
               select encounter_type_id, uuid, name from encounter_type where uuid in('a0034eee-1940-4e35-847f-97537a35d05e','c6d09e05-1f25-4164-8860-9f32c5a02df0','c4a2be28-6673-4c36-b886-ea89b0a42116','706a8b12-c4ce-40e4-aec3-258b989bf6d3','a2010bf5-2db0-4bf4-819f-8a3cffbcb21b','d1059fb9-a079-4feb-a749-eedd709ae542','465a92f2-baf8-42e9-9612-53064be868e8','7671cc06-b852-46e6-a279-afc8e2343a04')
               ) et on et.encounter_type_id=e.encounter_type
@@ -7517,6 +7568,7 @@ select
        e.voided as voided
 from encounter e
        inner join person p on p.person_id=e.patient_id and p.voided=0
+       inner join kenyaemr_etl.etl_patient_demographics d on d.patient_id=e.patient_id
        inner join (
                   select encounter_type_id, uuid, name from encounter_type where uuid in ('a0034eee-1940-4e35-847f-97537a35d05e', 'ed6dacc9-0827-4c82-86be-53c0d8c449be')
                   ) et on et.encounter_type_id=e.encounter_type
@@ -7587,6 +7639,7 @@ select
        e.voided as voided
 from encounter e
        inner join person p on p.person_id=e.patient_id and p.voided=0
+       inner join kenyaemr_etl.etl_patient_demographics d on d.patient_id=e.patient_id
        inner join (
                   select encounter_type_id, uuid, name from encounter_type where uuid ='de78a6be-bfc5-4634-adc3-5f1a280455cc'
                   ) et on et.encounter_type_id=e.encounter_type
@@ -7709,6 +7762,7 @@ from (select e.uuid,
       from obs o
              inner join encounter e on e.encounter_id = o.encounter_id
              inner join person p on p.person_id = o.person_id and p.voided = 0
+             inner join kenyaemr_etl.etl_patient_demographics d on d.patient_id=e.patient_id
              inner join (select encounter_type_id, uuid, name
                          from encounter_type
                          where uuid = '86709cfc-1490-11ec-82a8-0242ac130003') et
@@ -7780,6 +7834,7 @@ from (select e.uuid,
                          o1.voided
                   from obs o
                          inner join person p on p.person_id = o.person_id and p.voided = 0
+                         inner join kenyaemr_etl.etl_patient_demographics d on d.patient_id=e.patient_id
                          join obs o1 on o.obs_id = o1.obs_group_id
                                           and o1.concept_id in
                                               (163100, 984, 1418, 1410, 164464, 164134, 166063, 166638, 159948, 162477, 161010, 165864, 165932) and
@@ -7838,6 +7893,7 @@ select
     e.voided as voided
 from encounter e
     inner join person p on p.person_id=e.patient_id and p.voided=0
+    inner join kenyaemr_etl.etl_patient_demographics d on d.patient_id=e.patient_id
     inner join form f on f.form_id=e.form_id and f.uuid in ('a74e3e4a-9e2a-41fb-8e64-4ba8a71ff984')
     inner join obs o on o.encounter_id = e.encounter_id and o.concept_id in (160482,165143,167094,160632,167131) and o.voided=0
 where e.voided=0 and e.date_created >= last_update_time
@@ -7935,6 +7991,7 @@ select
     e.voided as voided
 from encounter e
     inner join person p on p.person_id=e.patient_id and p.voided=0
+    inner join kenyaemr_etl.etl_patient_demographics d on d.patient_id=e.patient_id
     inner join form f on f.form_id=e.form_id and f.uuid in ('5ee93f48-960b-11ec-b909-0242ac120002')
     inner join obs o on o.encounter_id = e.encounter_id and o.concept_id in (167118,167119,163042,167120,163042,163049,164964,164254,1444,166650,160715,163138,167132,162871,162875,162760,162749,1473,163556,164141,166014,167133,165139) and o.voided=0
 where e.voided=0
@@ -8034,6 +8091,7 @@ CREATE PROCEDURE sp_update_etl_vmmc_client_followup(IN last_update_time DATETIME
                                                   e.voided as voided
       from encounter e
         inner join person p on p.person_id=e.patient_id and p.voided=0
+        inner join kenyaemr_etl.etl_patient_demographics d on d.patient_id=e.patient_id
         inner join form f on f.form_id=e.form_id and f.uuid in ('08873f91-7161-4f90-931d-65b131f2b12b')
         inner join obs o on o.encounter_id = e.encounter_id and o.concept_id in (164181,162871,162875,162760,162749,159369,161011,1473,1542,160632) and o.voided=0
       where e.voided=0
@@ -8180,6 +8238,7 @@ BEGIN
       e.voided as voided
     from encounter e
              inner join person p on p.person_id=e.patient_id and p.voided=0
+             inner join kenyaemr_etl.etl_patient_demographics d on d.patient_id=e.patient_id
              inner join form f on f.form_id=e.form_id and f.uuid in ('d42aeb3d-d5d2-4338-a154-f75ddac78b59')
              inner join obs o on o.encounter_id = e.encounter_id and o.concept_id in (167093,1710,159427,160554,164855,159599,162053,5096,165239,161550,856,1305,
                                                                                       5497,1628,1728,163047,1794,163104,21,887,160557,164896,163393,54,161536,165241,
@@ -8296,6 +8355,7 @@ insert into kenyaemr_etl.etl_vmmc_post_operation_assessment(uuid,
            e.voided                                                                          as voided
     from encounter e
              inner join person p on p.person_id = e.patient_id and p.voided = 0
+             inner join kenyaemr_etl.etl_patient_demographics d on d.patient_id=e.patient_id
              inner join form f
                         on f.form_id = e.form_id and f.uuid in ('620b3404-9ae5-11ec-b909-0242ac120002')
              inner join obs o on o.encounter_id = e.encounter_id and o.concept_id in
@@ -8517,6 +8577,7 @@ select
     e.voided
       from encounter e
         inner join person p on p.person_id=e.patient_id and p.voided=0
+        inner join kenyaemr_etl.etl_patient_demographics d on d.patient_id=e.patient_id
         inner join form f on f.form_id = e.form_id and f.uuid = '04295648-7606-11e8-adc0-fa7ae01bbebc'
         left outer join obs o on o.encounter_id = e.encounter_id and o.concept_id in
         (164930,160581,138643,159936,164932,5619,166570,164401,165215,159427,
@@ -8695,6 +8756,7 @@ FROM orders o
          INNER JOIN person p
                     ON p.person_id = e.patient_id
                         AND p.voided = 0
+         inner join kenyaemr_etl.etl_patient_demographics d on d.patient_id=e.patient_id
          LEFT JOIN encounter_type et
                    ON et.encounter_type_id = e.encounter_type
 WHERE o.voided = 0
@@ -8815,6 +8877,7 @@ BEGIN
                       from obs o
                                inner join encounter e on e.encounter_id=o.encounter_id
                                inner join person p on p.person_id=o.person_id and p.voided=0
+                               inner join kenyaemr_etl.etl_patient_demographics d on d.patient_id=e.patient_id
                                inner join form f on f.form_id=e.form_id and f.uuid in ('d3ea25c7-a3e8-4f57-a6a9-e802c3565a30','e8f98494-af35-4bb8-9fc7-c409c8fed843')
                       where concept_id in(984,1418,161011,1410,5096) and o.voided=0
                          and e.date_created >= last_update_time
@@ -8910,6 +8973,7 @@ BEGIN
         e.voided
     from encounter e
              inner join person p on p.person_id=e.patient_id and p.voided=0
+             inner join kenyaemr_etl.etl_patient_demographics d on d.patient_id=e.patient_id
              inner join form f on f.form_id = e.form_id and f.uuid in ('92fd9c5a-c84a-483b-8d78-d4d7a600db30','d753bab3-0bbb-43f5-9796-5e95a5d641f3')
              left outer join obs o on o.encounter_id = e.encounter_id and o.concept_id in
                                                                           (162725,165146,165133,165006,165005,165136,165140,1193,163101,165141,160632,1473,165144,165143,160753)
@@ -9029,6 +9093,7 @@ BEGIN
            e.voided
     from encounter e
              inner join person p on p.person_id = e.patient_id and p.voided = 0
+             inner join kenyaemr_etl.etl_patient_demographics d on d.patient_id=e.patient_id
              inner join form f on f.form_id = e.form_id and f.uuid = '83fb6ab2-faec-4d87-a714-93e77a28a201'
              left outer join obs o on o.encounter_id = e.encounter_id and o.concept_id in
                                                                           (1758, 1282, 159777, 162878, 1284, 5272,
@@ -9372,6 +9437,7 @@ select
     e.voided
 from encounter e
     inner join person p on p.person_id=e.patient_id and p.voided=0
+    inner join kenyaemr_etl.etl_patient_demographics d on d.patient_id=e.patient_id
     inner join form f on f.form_id = e.form_id and f.uuid = 'e958f902-64df-4819-afd4-7fb061f59308'
     left outer join obs o on o.encounter_id = e.encounter_id and o.concept_id in
     (164174,160632,165104,162737,1651,1640,162477,1655,1000075,1896,1272,162724,160433,164181,163145,159495,2031533,160338)
@@ -9509,6 +9575,7 @@ BEGIN
         e.voided
     from encounter e
              inner join person p on p.person_id=e.patient_id and p.voided=0
+             inner join kenyaemr_etl.etl_patient_demographics d on d.patient_id=e.patient_id
              inner join form f on f.form_id = e.form_id and f.uuid = 'f44b2405-226b-47c4-b98f-b826ea4725ae'
              left outer join obs o on o.encounter_id = e.encounter_id and o.concept_id in
               (1646,166848,165205,165138,123160,164879,165349,165230,1530,164848,159427,1639,163042,163045,160971,162558,
@@ -9614,6 +9681,7 @@ BEGIN
         e.voided
     from encounter e
              inner join person p on p.person_id=e.patient_id and p.voided=0
+             inner join kenyaemr_etl.etl_patient_demographics d on d.patient_id=e.patient_id
              inner join form f on f.form_id = e.form_id and f.uuid = '155ccbe2-a33f-4a58-8ce6-57a7372071ee'
              left outer join obs o on o.encounter_id = e.encounter_id and o.concept_id in
                                                                           (1724,165171,161011,1356,159427,163951,167229,161472,165384,654,790,160632)
@@ -9800,6 +9868,7 @@ INSERT INTO kenyaemr_etl.etl_sgbv_post_rape_care (
         e.voided
     from encounter e
              inner join person p on p.person_id=e.patient_id and p.voided=0
+             inner join kenyaemr_etl.etl_patient_demographics d on d.patient_id=e.patient_id
              inner join form f on f.form_id = e.form_id and f.uuid = 'c46aa4fd-8a5a-4675-90a7-a6f2119f61d8'
              left outer join obs o on o.encounter_id = e.encounter_id and o.concept_id in
               (159948,162869,1639,165229,167214,167131,161564,159942,160945,166846,160303,123160,161011,1357,166484,162724,164093,165052,165152,165193,161550,
@@ -9941,6 +10010,7 @@ BEGIN
            e.voided
     from encounter e
              inner join person p on p.person_id = e.patient_id and p.voided = 0
+             inner join kenyaemr_etl.etl_patient_demographics d on d.patient_id=e.patient_id
              inner join form f on f.form_id = e.form_id and f.uuid = 'a0943862-f0fe-483d-9f11-44f62abae063'
              left outer join obs o on o.encounter_id = e.encounter_id and o.concept_id in
                                                                           (1646, 1272, 160540, 165092, 165205, 162869,
@@ -10026,6 +10096,7 @@ BEGIN
         e.voided
     from encounter e
              inner join person p on p.person_id=e.patient_id and p.voided=0
+             inner join kenyaemr_etl.etl_patient_demographics d on d.patient_id=e.patient_id
              inner join form f on f.form_id = e.form_id and f.uuid = 'a52c57d4-110f-4879-82ae-907b0d90add6'
              left outer join obs o on o.encounter_id = e.encounter_id and o.concept_id in
                   (160653,1382,374,167523,1386,166864,164901,160632,1379,166866,1177,167255,163145,160481,164359)
@@ -10145,6 +10216,7 @@ BEGIN
         e.voided
     from encounter e
              inner join person p on p.person_id=e.patient_id and p.voided=0
+             inner join kenyaemr_etl.etl_patient_demographics d on d.patient_id=e.patient_id
              inner join form f on f.form_id = e.form_id and f.uuid = '18c209ac-0787-4b51-b9aa-aa8b1581239c'
              left outer join obs o on o.encounter_id = e.encounter_id and o.concept_id in
                                                                           (164181,160338,160478,160632,164812,162725,1000485,160632,160629,1475,160629,602,165241,163580,165002,165250,163304,165250,161011,160433,163145,159495,162724,1640,162879,162477,1655,1000075,1896)
@@ -10340,6 +10412,7 @@ concat_ws(',',max(if(o.concept_id = 165302 and o.value_coded = 169400, 'Psycho-S
 e.voided
 from encounter e
 inner join person p on p.person_id = e.patient_id and p.voided = 0
+inner join kenyaemr_etl.etl_patient_demographics d on d.patient_id=e.patient_id
 inner join form f on f.form_id = e.form_id and f.uuid = '1fbd26f1-0478-437c-be1e-b8468bd03ffa'
 left outer join obs o on o.encounter_id = e.encounter_id and o.concept_id in
                               (164181, 160338, 160478, 5219, 165250, 124068,
@@ -10669,6 +10742,7 @@ BEGIN
            e.date_changed as date_last_modified
     from encounter e
              inner join person p on p.person_id = e.patient_id and p.voided = 0
+             inner join kenyaemr_etl.etl_patient_demographics d on d.patient_id=e.patient_id
              inner join form f on f.form_id = e.form_id and f.uuid in ('c5055956-c3bb-45f2-956f-82e114c57aa7', -- ENT
                                                                        '1fbd26f1-0478-437c-be1e-b8468bd03ffa', -- Psychiatry
                                                                        '235900ff-4d4a-4575-9759-96f325f5e291', -- Ophthamology
@@ -10826,6 +10900,7 @@ BEGIN
            e.voided
     from encounter e
              inner join person p on p.person_id = e.patient_id and p.voided = 0
+             inner join kenyaemr_etl.etl_patient_demographics d on d.patient_id=e.patient_id
              inner join form f on f.form_id = e.form_id and f.uuid = 'c7f47cea-207b-11e9-ab14-d663bd873d93'
              left outer join obs o on o.encounter_id = e.encounter_id and o.concept_id in
                                                                           (165004, 165027, 5570, 165030, 165031, 165032,
@@ -10925,6 +11000,7 @@ BEGIN
            e.date_changed
     from encounter e
              inner join person p on p.person_id = e.patient_id and p.voided = 0
+             inner join kenyaemr_etl.etl_patient_demographics d on d.patient_id=e.patient_id
              inner join form f on f.form_id = e.form_id and f.uuid = '6817d322-f938-4f38-8ccf-caa6fa7a499f'
              left outer join obs o on o.encounter_id = e.encounter_id and o.concept_id in
                                                                           (166937, 166607, 163777, 5096, 160753, 168804,
@@ -11027,6 +11103,7 @@ BEGIN
            e.date_changed
     from encounter e
              inner join person p on p.person_id = e.patient_id and p.voided = 0
+             inner join kenyaemr_etl.etl_patient_demographics d on d.patient_id=e.patient_id
              inner join form f on f.form_id = e.form_id and f.uuid = 'ac3152de-1728-4786-828a-7fb4db0fc384'
              left outer join obs o on o.encounter_id = e.encounter_id and o.concept_id in
                                                                           (162063, 160632,162725,163108,163104,161011, 168076, 167144, 159425,
@@ -11183,6 +11260,7 @@ BEGIN
            e.date_changed
     from encounter e
              inner join person p on p.person_id = e.patient_id and p.voided = 0
+             inner join kenyaemr_etl.etl_patient_demographics d on d.patient_id=e.patient_id
              inner join form f on f.form_id = e.form_id and f.uuid = 'cc27af13-69ee-49e2-8a43-e1b1926403c1'
              left outer join obs o on o.encounter_id = e.encounter_id and o.concept_id in                                               
                                 (162054, 162872,162871,163105,164422,160119,1724,162736,159367,
@@ -11423,6 +11501,7 @@ BEGIN
            e.date_changed
     from encounter e
              inner join person p on p.person_id = e.patient_id and p.voided = 0
+             inner join kenyaemr_etl.etl_patient_demographics d on d.patient_id=e.patient_id
              inner join form f on f.form_id = e.form_id and f.uuid = 'd11c340d-defb-443f-b7de-e81dc87060a4'
              left outer join obs o on o.encounter_id = e.encounter_id and o.concept_id in                                               
                                 (2031464,160632,969,159892,166665,5303,159424,160119,1000606,160433,
@@ -11486,9 +11565,6 @@ BEGIN
      date_last_modified=VALUES(date_last_modified);
     SELECT "Completed processing ATP Disclosure Readiness Assessment";
 END $$
-
-
-
 
 -- Procedure sp_update_ATP taking charge tracking
 DROP PROCEDURE IF EXISTS sp_update_etl_atp_taking_charge_tracking $$
@@ -11563,6 +11639,7 @@ BEGIN
            e.date_changed
     from encounter e
              inner join person p on p.person_id = e.patient_id and p.voided = 0
+             inner join kenyaemr_etl.etl_patient_demographics d on d.patient_id=e.patient_id
              inner join form f on f.form_id = e.form_id and f.uuid = 'a4276b08-5bf1-402a-bb6a-0b2e54b41d67'
              left outer join obs o on o.encounter_id = e.encounter_id and o.concept_id in                                               
                                 (160753,165364,166937,165360,163766,165363,1000164,164433,2031464,160632,163042,163049,163164,2031723,163258,162724)
@@ -11693,6 +11770,7 @@ BEGIN
            e.date_changed
     from encounter e
              inner join person p on p.person_id = e.patient_id and p.voided = 0
+             inner join kenyaemr_etl.etl_patient_demographics d on d.patient_id=e.patient_id
              inner join form f on f.form_id = e.form_id and f.uuid = 'f4237de5-355a-4437-a09b-3e164719ae9c'
              left outer join obs o on o.encounter_id = e.encounter_id and o.concept_id in                                               
                                 (1436,162695,1149,165244,163310,165245,160288,166484,160582,
@@ -11898,7 +11976,6 @@ BEGIN
         max(rg.provider_reflection_adherence)                                                        as provider_reflection_adherence,
         max(rg.provider_reflection_interaction_caregiver)                                            as provider_reflection_interaction_caregiver,
         max(rg.provider_reflection_interaction_provider)                                             as provider_reflection_interaction_provider,
-        -- ----------------------------------------------------------------
         max(if(o.concept_id = 164378, o.value_text, null))                                          as action_taken_at_visit,
         max(if(o.concept_id = 2032082, o.value_text, null))                                         as action_plan_caregiver,
         max(if(o.concept_id = 2032081, o.value_text, null))                                         as action_plan_child,
@@ -11907,6 +11984,7 @@ BEGIN
         e.date_changed
     from encounter e
         inner join person p on p.person_id = e.patient_id and p.voided = 0
+        inner join kenyaemr_etl.etl_patient_demographics d on d.patient_id=e.patient_id
         inner join form f on f.form_id = e.form_id and f.uuid = '40b6b389-5b4e-47b1-aa15-88ee24b56f6a'
         inner join obs o on o.encounter_id = e.encounter_id
             and o.concept_id in (2010456,161011,969,164879,1000164,5303,2031957,160119,2032077,
@@ -12230,6 +12308,7 @@ select
        e.voided
 from encounter e
        inner join person p on p.person_id=e.patient_id and p.voided=0
+       inner join kenyaemr_etl.etl_patient_demographics d on d.patient_id=e.patient_id
        inner join form f on f.form_id = e.form_id and f.uuid = 'c4994dd7-f2b6-4c28-bdc7-8b1d9d2a6a97'
        inner join obs o on o.encounter_id = e.encounter_id and o.concept_id in (164181,161550,159371,161011,1628,5219,1000485,119481,152909,160223,162725,162725,162747,162869,1169,163783,165198,152722,1191,1455,1000519,1000520,6042,161011,120240,161011,
                                                                                  162737,1124,1124,1124,1124,163308,166879,166676,1284,1284,165250,166665,161011,165070,165250,162737,162724,159623,160632) and o.voided=0
@@ -12386,6 +12465,7 @@ select
        e.voided
 from encounter e
        inner join person p on p.person_id=e.patient_id and p.voided=0
+       inner join kenyaemr_etl.etl_patient_demographics d on d.patient_id=e.patient_id
        inner join form f on f.form_id = e.form_id and f.uuid = '3e1057da-f130-44d9-b2bb-53e039b953c6'
        inner join obs o on o.encounter_id = e.encounter_id and o.concept_id in (164181,152722,159449,1000519,1000520,6042,6042,161011,162737,1124,1124,1124,1124,163308,
        1127,1284,1284,166879,164075,162724,159623,160632) and o.voided=0
@@ -12464,6 +12544,7 @@ BEGIN
         e.voided
     from encounter e
              inner join person p on p.person_id=e.patient_id and p.voided=0
+             inner join kenyaemr_etl.etl_patient_demographics d on d.patient_id=e.patient_id
              inner join (select encounter_type_id, uuid, name
                          from encounter_type
                          where uuid = 'e22e39fd-7db2-45e7-80f1-60fa0d5a4378') et
@@ -12526,6 +12607,7 @@ BEGIN
         e.voided
     from encounter e
              inner join person p on p.person_id=e.patient_id and p.voided=0
+             inner join kenyaemr_etl.etl_patient_demographics d on d.patient_id=e.patient_id
              inner join form f on f.form_id = e.form_id and f.uuid = '98a781d2-b777-4756-b4c9-c9b0deb3483c'
              inner join obs o on o.encounter_id = e.encounter_id and o.concept_id in (160632,1695,5096,167079) and o.voided=0
     where e.voided=0
@@ -12581,6 +12663,7 @@ BEGIN
         e.voided
     from encounter e
              inner join person p on p.person_id=e.patient_id and p.voided=0
+             inner join kenyaemr_etl.etl_patient_demographics d on d.patient_id=e.patient_id
              inner join form f on f.form_id = e.form_id and f.uuid = '87379b0a-738b-4799-9736-cdac614cee2a'
              inner join obs o on o.encounter_id = e.encounter_id and o.concept_id in (167132,1695) and o.voided=0
     where e.voided=0
