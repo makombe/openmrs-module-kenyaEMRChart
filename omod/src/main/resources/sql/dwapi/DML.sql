@@ -9883,11 +9883,11 @@ BEGIN
         e.encounter_datetime as visit_date,
         e.location_id,
         e.encounter_id,
-        max(if(o.concept_id = 164181, o.value_coded, "" )) as client_type,
-        max(if(o.concept_id = 166636, o.value_coded, "" )) as referral_type,
-        max(if(o.concept_id = 160112,o.value_coded, "" )) as accompanied_by,
-        max(if(o.concept_id = 160638,o.value_coded, "" )) as outreach_worker,
-        max(if(o.concept_id = 1473,o.value_coded, "" )) as service_provider,
+        max(if(o.concept_id = 164181, o.value_coded, null )) as client_type,
+        max(if(o.concept_id = 166636, o.value_coded, null )) as referral_type,
+        max(if(o.concept_id = 160112,o.value_coded, null )) as accompanied_by,
+        max(if(o.concept_id = 160638,o.value_coded, null )) as outreach_worker,
+        max(if(o.concept_id = 1473,o.value_coded, null )) as service_provider,
         max(if(o.concept_id = 163181, o.value_datetime, null))  as date_enrolled,
         e.date_created as date_created,
         if(max(o.date_created) > min(e.date_created),max(o.date_created),NULL) as date_last_modified,
@@ -9915,7 +9915,7 @@ BEGIN
         location_id,
         encounter_id,
         experienced_overdose,
-        disease_name,
+        diagnosed_with_illness_name,
         hepatitis_B_screened,
         hepatitis_B_treated,
         hepatitis_C_screened,
@@ -9940,7 +9940,7 @@ BEGIN
         e.location_id,
         e.encounter_id,
         max(if(o.concept_id = 165220, o.value_coded,null )) as experienced_overdose,
-        max(if(o.concept_id = 159926, o.value_coded,null)) as disease_name,
+        max(if(o.concept_id = 159926, o.value_coded,null)) as diagnosed_with_illness_name,
         max(if(o.concept_id = 165040, o.value_coded,null)) as hepatitis_B_screened,
         max(if(o.concept_id = 166665, o.value_coded,null)) as hepatitis_B_treated,
         max(if(o.concept_id = 165041, o.value_coded,null)) as hepatitis_C_screened,
@@ -10023,6 +10023,7 @@ BEGIN
         type_of_gbv_experienced,
         treatment_stage,
         received_violence_support,
+        reintegrated_back,
         date_created,
         date_last_modified,
         voided
@@ -10039,13 +10040,14 @@ BEGIN
         max(if(o.concept_id = 163556, o.value_coded, null))  as type_of_gbv_experienced,
         max(if(o.concept_id = 167530, o.value_coded, null))  as treatment_stage,
         max(if(o.concept_id = 165138, o.value_text, null))  as received_violence_support,
+        max(if(o.concept_id = 164352, o.value_text, null))  as reintegrated_back,
         e.date_created as date_created,
         if(max(o.date_created) > min(e.date_created),max(o.date_created),NULL) as date_last_modified,
         e.voided
     from encounter e
              inner join person p on p.person_id=e.patient_id and p.voided=0
              inner join form f on f.form_id = e.form_id and f.uuid in ('cfd2109b-63b3-43de-8bb3-682e80c5a965')
-             inner join obs o on o.encounter_id = e.encounter_id and o.concept_id in (167161,163556,167530,165138) and o.voided=0
+             inner join obs o on o.encounter_id = e.encounter_id and o.concept_id in (167161,163556,167530,165138,164352) and o.voided=0
     where e.voided=0
     group by e.encounter_id;
 
