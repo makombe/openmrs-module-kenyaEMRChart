@@ -106,6 +106,11 @@ DROP TABLE IF EXISTS dwapi_etl.etl_ncd_followup;
 DROP TABLE IF EXISTS dwapi_etl.etl_inpatient_admission;
 DROP TABLE IF EXISTS dwapi_etl.etl_inpatient_discharge;
 DROP TABLE IF EXISTS dwapi_etl.etl_doctor_progress_note;
+DROP TABLE IF EXISTS dwapi_etl.etl_mat_intial_registrations;
+DROP TABLE IF EXISTS dwapi_etl.etl_mat_clinical_encounter;
+DROP TABLE IF EXISTS dwapi_etl.etl_mat_transit;
+DROP TABLE IF EXISTS dwapi_etl.etl_mat_psychosocial_intake_and_followup;
+DROP TABLE IF EXISTS dwapi_etl.etl_mat_cessation;
 
 -- create table etl_patient_demographics
 create table dwapi_etl.etl_patient_demographics (
@@ -4465,6 +4470,146 @@ CREATE TABLE dwapi_etl.etl_doctor_progress_note
     INDEX (visit_date)
 );
 SELECT "Successfully created etl_doctor_progress_note table";
+
+
+-- Create etl_mat_intial_registrations table
+CREATE TABLE dwapi_etl.etl_mat_intial_registrations
+(
+    uuid               CHAR(38) NOT NULL,
+    encounter_provider INT(11)  NOT NULL,
+    patient_id         INT(11)  NOT NULL,
+    visit_id           INT(11)  DEFAULT NULL,
+    visit_date         DATETIME NOT NULL,
+    location_id        INT(11)  NOT NULL,
+    encounter_id       INT(11)  NOT NULL PRIMARY KEY,
+    client_type        INT(11),
+    referral_type      INT(11),
+    accompanied_by         INT(11),
+    outreach_worker        INT(11),
+    service_provider        INT(11),
+    date_enrolled DATETIME,
+    date_created       DATETIME NOT NULL,
+    date_last_modified DATETIME,
+    voided             INT(11),
+    CONSTRAINT FOREIGN KEY (patient_id)
+        REFERENCES dwapi_etl.etl_patient_demographics (patient_id),
+    CONSTRAINT unique_uuid UNIQUE (uuid),
+    INDEX (patient_id),
+    INDEX (visit_id),
+    INDEX (visit_date)
+);
+SELECT "Successfully created etl_mat_intial_registrations table";
+
+-- Create etl_mat_clinical_encounter table
+CREATE TABLE dwapi_etl.etl_mat_clinical_encounter
+(
+    uuid               CHAR(38) NOT NULL,
+    encounter_provider INT(11)  NOT NULL,
+    patient_id         INT(11)  NOT NULL,
+    visit_id           INT(11)  DEFAULT NULL,
+    visit_date         DATETIME NOT NULL,
+    location_id        INT(11)  NOT NULL,
+    encounter_id       INT(11)  NOT NULL PRIMARY KEY,
+    experienced_overdose        INT(11),
+    diagnosed_with_illness_name        INT(11),
+    hepatitis_B_screened        INT(11),
+    hepatitis_B_treated        INT(11),
+    hepatitis_C_screened        INT(11),
+    hepatitis_C_treated        INT(11),
+    is_suffering_mental_disorder         INT(11),
+    treating_mental_disorder        INT(11),
+    diagnosed_illnesses        INT(11),
+    has_disease_type        INT(11),
+    treated_disease        INT(11),
+    buprenorphine_induction        INT(11),
+    methadone_induction        INT(11),
+    date_created       DATETIME NOT NULL,
+    date_last_modified DATETIME,
+    voided             INT(11),
+    CONSTRAINT FOREIGN KEY (patient_id)
+        REFERENCES dwapi_etl.etl_patient_demographics (patient_id),
+    CONSTRAINT unique_uuid UNIQUE (uuid),
+    INDEX (patient_id),
+    INDEX (visit_id),
+    INDEX (visit_date)
+);
+SELECT "Successfully created etl_mat_clinical_encounter table";
+
+-- Create etl_mat_transit table
+CREATE TABLE dwapi_etl.etl_mat_transit
+(
+    uuid               CHAR(38) NOT NULL,
+    encounter_provider INT(11)  NOT NULL,
+    patient_id         INT(11)  NOT NULL,
+    visit_id           INT(11)  DEFAULT NULL,
+    visit_date         DATETIME NOT NULL,
+    location_id        INT(11)  NOT NULL,
+    encounter_id       INT(11)  NOT NULL PRIMARY KEY,
+    on_transit        INT(11),
+    date_created       DATETIME NOT NULL,
+    date_last_modified DATETIME,
+    voided             INT(11),
+    CONSTRAINT FOREIGN KEY (patient_id)
+        REFERENCES dwapi_etl.etl_patient_demographics (patient_id),
+    CONSTRAINT unique_uuid UNIQUE (uuid),
+    INDEX (patient_id),
+    INDEX (visit_id),
+    INDEX (visit_date)
+);
+SELECT "Successfully created etl_mat_transit table";
+
+-- Create etl_mat_psychosocial_intake_and_followup table
+CREATE TABLE dwapi_etl.etl_mat_psychosocial_intake_and_followup
+(
+    uuid               CHAR(38) NOT NULL,
+    encounter_provider INT(11)  NOT NULL,
+    patient_id         INT(11)  NOT NULL,
+    visit_id           INT(11)  DEFAULT NULL,
+    visit_date         DATETIME NOT NULL,
+    location_id        INT(11)  NOT NULL,
+    encounter_id       INT(11)  NOT NULL PRIMARY KEY,
+    experienced_gbv        INT(11),
+    type_of_gbv_experienced        INT(11),
+    treatment_stage        INT(11),
+    received_violence_support        VARCHAR(255),
+    reintegrated_back        INT(11),
+    date_created       DATETIME NOT NULL,
+    date_last_modified DATETIME,
+    voided             INT(11),
+    CONSTRAINT FOREIGN KEY (patient_id)
+        REFERENCES dwapi_etl.etl_patient_demographics (patient_id),
+    CONSTRAINT unique_uuid UNIQUE (uuid),
+    INDEX (patient_id),
+    INDEX (visit_id),
+    INDEX (visit_date)
+);
+SELECT "Successfully created etl_mat_psychosocial_intake_and_followup table";
+
+-- Create etl_mat_cessation table
+CREATE TABLE dwapi_etl.etl_mat_cessation
+(
+    uuid               CHAR(38) NOT NULL,
+    encounter_provider INT(11)  NOT NULL,
+    patient_id         INT(11)  NOT NULL,
+    visit_id           INT(11)  DEFAULT NULL,
+    visit_date         DATETIME NOT NULL,
+    location_id        INT(11)  NOT NULL,
+    encounter_id       INT(11)  NOT NULL PRIMARY KEY,
+    on_methadone_for_past_12_months        INT(11),
+    weaned_off_methadone        INT(11),
+    date_created       DATETIME NOT NULL,
+    date_last_modified DATETIME,
+    voided             INT(11),
+    CONSTRAINT FOREIGN KEY (patient_id)
+        REFERENCES dwapi_etl.etl_patient_demographics (patient_id),
+    CONSTRAINT unique_uuid UNIQUE (uuid),
+    INDEX (patient_id),
+    INDEX (visit_id),
+    INDEX (visit_date)
+);
+SELECT "Successfully created etl_mat_cessation table";
+
+
 UPDATE kenyaemr_etl.etl_script_status SET stop_time=NOW() where id= script_id;
 
 END $$
