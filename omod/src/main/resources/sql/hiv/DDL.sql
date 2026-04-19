@@ -130,6 +130,7 @@ DROP TABLE IF EXISTS kenyaemr_etl.etl_mat_clinical_encounter;
 DROP TABLE IF EXISTS kenyaemr_etl.etl_mat_transit;
 DROP TABLE IF EXISTS kenyaemr_etl.etl_mat_psychosocial_intake_and_followup;
 DROP TABLE IF EXISTS kenyaemr_etl.etl_mat_cessation;
+DROP TABLE IF EXISTS kenyaemr_etl.etl_mat_discontinuation;
 
 -- create table etl_patient_demographics
 create table kenyaemr_etl.etl_patient_demographics (
@@ -4808,6 +4809,7 @@ CREATE TABLE kenyaemr_etl.etl_mat_clinical_encounter
     visit_date         DATETIME NOT NULL,
     location_id        INT(11)  NOT NULL,
     encounter_id       INT(11)  NOT NULL PRIMARY KEY,
+    has_drug_use_history        INT(11),
     experienced_overdose        INT(11),
     diagnosed_with_illness_name        INT(11),
     hepatitis_B_screened        INT(11),
@@ -4821,6 +4823,7 @@ CREATE TABLE kenyaemr_etl.etl_mat_clinical_encounter
     treated_disease        INT(11),
     buprenorphine_induction        INT(11),
     methadone_induction        INT(11),
+    psychosocial_support INT(11),
     date_created       DATETIME NOT NULL,
     date_last_modified DATETIME,
     voided             INT(11),
@@ -4844,6 +4847,8 @@ CREATE TABLE kenyaemr_etl.etl_mat_transit
     location_id        INT(11)  NOT NULL,
     encounter_id       INT(11)  NOT NULL PRIMARY KEY,
     on_transit        INT(11),
+    current_methadone_bup_dose      INT(11),
+    date_time_last_given DATETIME,
     date_created       DATETIME NOT NULL,
     date_last_modified DATETIME,
     voided             INT(11),
@@ -4906,6 +4911,33 @@ CREATE TABLE kenyaemr_etl.etl_mat_cessation
     INDEX (visit_date)
 );
 SELECT "Successfully created etl_mat_cessation table";
+
+-- Create etl_mat_discontinuation table
+CREATE TABLE kenyaemr_etl.etl_mat_discontinuation
+(
+    uuid               CHAR(38) NOT NULL,
+    encounter_provider INT(11)  NOT NULL,
+    patient_id         INT(11)  NOT NULL,
+    visit_id           INT(11)  DEFAULT NULL,
+    visit_date         DATETIME NOT NULL,
+    location_id        INT(11)  NOT NULL,
+    encounter_id       INT(11)  NOT NULL PRIMARY KEY,
+    type_of_discontinuation        INT(11),
+    discontinuation_request        INT(11),
+    reason_discontinued        VARCHAR(255),
+    date_commenced DATETIME,
+    date_created       DATETIME NOT NULL,
+    date_last_modified DATETIME,
+    voided             INT(11),
+    CONSTRAINT FOREIGN KEY (patient_id)
+        REFERENCES dwapi_etl.etl_patient_demographics (patient_id),
+    CONSTRAINT unique_uuid UNIQUE (uuid),
+    INDEX (patient_id),
+    INDEX (visit_id),
+    INDEX (visit_date)
+);
+SELECT "Successfully created etl_mat_discontinuation table";
+
 
 UPDATE kenyaemr_etl.etl_script_status SET stop_time=NOW() where id= script_id;
 

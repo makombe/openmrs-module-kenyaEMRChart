@@ -913,7 +913,8 @@ et.uuid as program_uuid,
 	when 'c4994dd7-f2b6-4c28-bdc7-8b1d9d2a6a97' then 'NCD'
 	when '72635673-0613-4259-916e-e0d5d5ef8f66' then 'Antenatal Care'
 	when '286598d5-1886-4f0d-9e5f-fa5473399cee' then 'Postnatal Care'
-end) as program_name,
+    when 'd36bd361-c155-4c3d-a44b-df99f4e111b3' then 'MAT'
+    end) as program_name,
 e.encounter_id,
 coalesce(max(if(o.concept_id=161555, o.value_coded, null)),max(if(o.concept_id=159786, o.value_coded, null))) as reason_discontinued,
 coalesce(max(if(o.concept_id=164384, o.value_datetime, null)),max(if(o.concept_id=159787, o.value_datetime, null))) as effective_discontinuation_date,
@@ -937,7 +938,7 @@ inner join
 	uuid in('2bdada65-4c72-4a48-8730-859890e25cee','d3e3d723-7458-4b4e-8998-408e8a551a84','5feee3f1-aa16-4513-8bd0-5d9b27ef1208',
 	'7c426cfc-3b47-4481-b55f-89860c21c7de','01894f88-dc73-42d4-97a3-0929118403fb','bb77c683-2144-48a5-a011-66d904d776c9',
 	        '162382b8-0464-11ea-9a9f-362b9e155667','5cf00d9e-09da-11ea-8d71-362b9e155667','d7142400-2495-11e9-ab14-d663bd873d93','4f02dfed-a2ec-40c2-b546-85dab5831871', 'c4994dd7-f2b6-4c28-bdc7-8b1d9d2a6a97',
-	       '72635673-0613-4259-916e-e0d5d5ef8f66','286598d5-1886-4f0d-9e5f-fa5473399cee')
+	       '72635673-0613-4259-916e-e0d5d5ef8f66','286598d5-1886-4f0d-9e5f-fa5473399cee', 'd36bd361-c155-4c3d-a44b-df99f4e111b3')
 ) et on et.encounter_type_id=e.encounter_type
 group by e.encounter_id) q
 LEFT JOIN location l ON l.uuid = q.to_facility_raw;
@@ -11372,6 +11373,7 @@ insert into kenyaemr_etl.etl_mat_clinical_encounter(
     visit_date,
     location_id,
     encounter_id,
+    has_drug_use_history,
     experienced_overdose,
     diagnosed_with_illness_name,
     hepatitis_B_screened,
@@ -11385,6 +11387,7 @@ insert into kenyaemr_etl.etl_mat_clinical_encounter(
     treated_disease,
     buprenorphine_induction,
     methadone_induction,
+    psychosocial_support,
     date_created,
     date_last_modified,
     voided
@@ -11397,6 +11400,7 @@ select
     e.encounter_datetime as visit_date,
     e.location_id,
     e.encounter_id,
+    max(if(o.concept_id = 165034, o.value_coded,null )) as has_drug_use_history,
     max(if(o.concept_id = 165220, o.value_coded,null )) as experienced_overdose,
     max(if(o.concept_id = 159926, o.value_coded,null)) as diagnosed_with_illness_name,
     max(if(o.concept_id = 165040, o.value_coded,null)) as hepatitis_B_screened,
@@ -11410,15 +11414,16 @@ select
     max(if(o.concept_id = 165248, o.value_text,null)) as treated_disease,
     max(if(o.concept_id = 167370, o.value_numeric,null)) as buprenorphine_induction,
     max(if(o.concept_id = 167369, o.value_numeric,null)) as methadone_induction,
-
+    max(if(o.concept_id = 165302, o.value_coded,null)) as psychosocial_support,
     e.date_created as date_created,
     if(max(o.date_created) > min(e.date_created),max(o.date_created),NULL) as date_last_modified,
     e.voided
 from encounter e
          inner join person p on p.person_id=e.patient_id and p.voided=0
          inner join form f on f.form_id = e.form_id and f.uuid in ('5ed937a0-0933-41c3-b638-63d8a4779845')
-         inner join obs o on o.encounter_id = e.encounter_id and o.concept_id in (165220,159926,165040,166665,
-                                                                                  165041,165254,159926,1284,164401,159926,165248,167370,167369) and o.voided=0
+         inner join obs o on o.encounter_id = e.encounter_id and o.concept_id in (165034,165220,159926,165040,166665,
+                                                                                  165041,165254,159926,1284,164401,
+                                                                                  159926,165248,167370,167369,165302) and o.voided=0
 where e.voided=0
 group by e.encounter_id;
 
@@ -11438,6 +11443,8 @@ insert into kenyaemr_etl.etl_mat_transit(
     location_id,
     encounter_id,
     on_transit,
+    current_methadone_bup_dose,
+    date_time_last_given,
     date_created,
     date_last_modified,
     voided
@@ -11451,13 +11458,15 @@ select
     e.location_id,
     e.encounter_id,
     max(if(o.concept_id = 1768, o.value_coded,null)) as on_transit,
+    max(if(o.concept_id = 167369, o.value_numeric,null)) as  current_methadone_bup_dose,
+    max(if(o.concept_id=166865,o.value_datetime,null)) as date_time_last_given,
     e.date_created as date_created,
     if(max(o.date_created) > min(e.date_created),max(o.date_created),NULL) as date_last_modified,
     e.voided
 from encounter e
          inner join person p on p.person_id=e.patient_id and p.voided=0
          inner join form f on f.form_id = e.form_id and f.uuid in ('b9495048-eceb-4dd2-bfba-330dc4900ee9')
-         inner join obs o on o.encounter_id = e.encounter_id and o.concept_id in (1768) and o.voided=0
+         inner join obs o on o.encounter_id = e.encounter_id and o.concept_id in (1768,167369,166865) and o.voided=0
 where e.voided=0
 group by e.encounter_id;
 
@@ -11497,7 +11506,7 @@ select
     max(if(o.concept_id = 163556, o.value_coded, null))  as type_of_gbv_experienced,
     max(if(o.concept_id = 167530, o.value_coded, null))  as treatment_stage,
     max(if(o.concept_id = 165138, o.value_text, null))  as received_violence_support,
-    max(if(o.concept_id = 164352, o.value_text, null))  as reintegrated_back,
+    max(if(o.concept_id = 164352, o.value_coded, null))  as reintegrated_back,
     e.date_created as date_created,
     if(max(o.date_created) > min(e.date_created),max(o.date_created),NULL) as date_last_modified,
     e.voided
@@ -11550,6 +11559,54 @@ where e.voided=0
 group by e.encounter_id;
 
 SELECT "Completed processing MAT cessation data... ";
+END $$
+
+DROP PROCEDURE IF EXISTS sp_populate_etl_mat_discontinuation $$
+CREATE PROCEDURE sp_populate_etl_mat_discontinuation()
+BEGIN
+SELECT "Processing MAT discontinuation data... ";
+insert into kenyaemr_etl.etl_mat_discontinuation(
+    uuid,
+    encounter_provider,
+    patient_id,
+    visit_id,
+    visit_date,
+    location_id,
+    encounter_id,
+    type_of_discontinuation,
+    discontinuation_request,
+    reason_discontinued,
+    date_commenced,
+    date_created,
+    date_last_modified,
+    voided
+)
+select
+    e.uuid,
+    e.creator as encounter_provider,
+    e.patient_id,
+    e.visit_id,
+    e.encounter_datetime as visit_date,
+    e.location_id,
+    e.encounter_id,
+    max(if(o.concept_id = 164181, o.value_coded, null )) as type_of_discontinuation,
+    max(if(o.concept_id = 164089, o.value_coded, null )) as discontinuation_request,
+    COALESCE(
+            MAX(IF(o.concept_id = 160632, o.value_text, NULL)),
+            MAX(IF(o.concept_id = 161555, o.value_coded, NULL))
+    ) as reason_discontinued,
+    max(if(o.concept_id = 162549, o.value_datetime, null )) as date_commenced,
+    e.date_created as date_created,
+    if(max(o.date_created) > min(e.date_created),max(o.date_created),NULL) as date_last_modified,
+    e.voided
+from encounter e
+         inner join person p on p.person_id=e.patient_id and p.voided=0
+         inner join form f on f.form_id = e.form_id and f.uuid in ('38d6e116-b96c-4916-a821-b4dc83e2041d')
+         inner join obs o on o.encounter_id = e.encounter_id and o.concept_id in (164181,164089,160632,162549) and o.voided=0
+where e.voided=0
+group by e.encounter_id;
+
+SELECT "Completed processing MAT discontinuation data... ";
 END $$
 
 SET sql_mode=@OLD_SQL_MODE $$
@@ -11668,6 +11725,7 @@ CALL sp_populate_etl_mat_clinical_encounter();
 CALL sp_populate_etl_mat_transit();
 CALL sp_populate_etl_mat_psychosocial_intake_and_followup();
 CALL sp_populate_etl_mat_cessation();
+CALL sp_populate_etl_mat_discontinuation();
 
 UPDATE kenyaemr_etl.etl_script_status SET stop_time=NOW() where id= populate_script_id;
 
