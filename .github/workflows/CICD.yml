@@ -25,7 +25,7 @@ jobs:
           git config --global --add safe.directory /apps/github-workflows/kenyaemr-modules/openmrs-module-kenyaEMRChart
           cd /apps/github-workflows/kenyaemr-modules/openmrs-module-kenyaEMRChart
           bash /apps/workflowConfigs/clearCharts.sh
-          sudo git clone -b master  https://github.com/palladiumkenya/openmrs-module-kenyaEMRChart.git .
+          git clone -b master https://${{ secrets.CICD_TOKEN }}@github.com/Palladium-hub/openmrs-module-kenyaEMRChart.git .
           sudo mvn license:format
           sudo mvn clean install -DskipTests
           sudo rm -rf /var/lib/OpenMRS/modules/kenyaEMRChart-*.omod
