@@ -28,7 +28,7 @@ jobs:
           git clone -b master https://${{ secrets.CICD_TOKEN }}@github.com/Palladium-hub/openmrs-module-kenyaEMRChart.git .
           sudo mvn license:format
           sudo mvn clean install -DskipTests
-          sudo rm -rf /var/lib/OpenMRS/modules/kenyaEMRChart-*.omod
+          sudo rm -rf /var/lib/OpenMRS/modules/kenyaemrCharts-*.omod
           sudo cp /apps/github-workflows/kenyaemr-modules/openmrs-module-kenyaEMRChart/omod/target/kenyaemrCharts-*.omod /var/lib/OpenMRS/modules/
           sudo chown -R tomcat:tomcat /var/lib/OpenMRS/modules/
           sudo chmod +r /var/lib/OpenMRS/modules/*.omod
