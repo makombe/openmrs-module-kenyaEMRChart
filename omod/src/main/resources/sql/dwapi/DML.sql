@@ -9914,6 +9914,7 @@ BEGIN
         visit_date,
         location_id,
         encounter_id,
+        has_drug_use_history,
         experienced_overdose,
         diagnosed_with_illness_name,
         hepatitis_B_screened,
@@ -9927,6 +9928,7 @@ BEGIN
         treated_disease,
         buprenorphine_induction,
         methadone_induction,
+        psychosocial_support,
         date_created,
         date_last_modified,
         voided
@@ -9939,6 +9941,7 @@ BEGIN
         e.encounter_datetime as visit_date,
         e.location_id,
         e.encounter_id,
+        max(if(o.concept_id = 165034, o.value_coded,null )) as has_drug_use_history,
         max(if(o.concept_id = 165220, o.value_coded,null )) as experienced_overdose,
         max(if(o.concept_id = 159926, o.value_coded,null)) as diagnosed_with_illness_name,
         max(if(o.concept_id = 165040, o.value_coded,null)) as hepatitis_B_screened,
@@ -9952,15 +9955,16 @@ BEGIN
         max(if(o.concept_id = 165248, o.value_text,null)) as treated_disease,
         max(if(o.concept_id = 167370, o.value_numeric,null)) as buprenorphine_induction,
         max(if(o.concept_id = 167369, o.value_numeric,null)) as methadone_induction,
-
+        max(if(o.concept_id = 165302, o.value_coded,null)) as psychosocial_support,
         e.date_created as date_created,
         if(max(o.date_created) > min(e.date_created),max(o.date_created),NULL) as date_last_modified,
         e.voided
     from encounter e
              inner join person p on p.person_id=e.patient_id and p.voided=0
              inner join form f on f.form_id = e.form_id and f.uuid in ('5ed937a0-0933-41c3-b638-63d8a4779845')
-             inner join obs o on o.encounter_id = e.encounter_id and o.concept_id in (165220,159926,165040,166665,
-                                                                                      165041,165254,159926,1284,164401,159926,165248,167370,167369) and o.voided=0
+             inner join obs o on o.encounter_id = e.encounter_id and o.concept_id in (165034,165220,159926,165040,166665,
+                                                                                      165041,165254,159926,1284,164401,
+                                                                                      159926,165248,167370,167369,165302) and o.voided=0
     where e.voided=0
     group by e.encounter_id;
 
@@ -9980,6 +9984,8 @@ BEGIN
         location_id,
         encounter_id,
         on_transit,
+        current_methadone_bup_dose,
+        date_time_last_given,
         date_created,
         date_last_modified,
         voided
@@ -9993,14 +9999,15 @@ BEGIN
         e.location_id,
         e.encounter_id,
         max(if(o.concept_id = 1768, o.value_coded,null)) as on_transit,
-
+        max(if(o.concept_id = 167369, o.value_numeric,null)) as  current_methadone_bup_dose,
+        max(if(o.concept_id=166865,o.value_datetime,null)) as date_time_last_given,
         e.date_created as date_created,
         if(max(o.date_created) > min(e.date_created),max(o.date_created),NULL) as date_last_modified,
         e.voided
     from encounter e
              inner join person p on p.person_id=e.patient_id and p.voided=0
              inner join form f on f.form_id = e.form_id and f.uuid in ('b9495048-eceb-4dd2-bfba-330dc4900ee9')
-             inner join obs o on o.encounter_id = e.encounter_id and o.concept_id in (1768) and o.voided=0
+             inner join obs o on o.encounter_id = e.encounter_id and o.concept_id in (1768,167369,166865) and o.voided=0
     where e.voided=0
     group by e.encounter_id;
 
@@ -10040,7 +10047,7 @@ BEGIN
         max(if(o.concept_id = 163556, o.value_coded, null))  as type_of_gbv_experienced,
         max(if(o.concept_id = 167530, o.value_coded, null))  as treatment_stage,
         max(if(o.concept_id = 165138, o.value_text, null))  as received_violence_support,
-        max(if(o.concept_id = 164352, o.value_text, null))  as reintegrated_back,
+        max(if(o.concept_id = 164352, o.value_coded, null))  as reintegrated_back,
         e.date_created as date_created,
         if(max(o.date_created) > min(e.date_created),max(o.date_created),NULL) as date_last_modified,
         e.voided
@@ -10095,6 +10102,53 @@ BEGIN
     SELECT "Completed processing MAT cessation data... ";
 END $$
 
+DROP PROCEDURE IF EXISTS sp_populate_dwapi_etl_mat_discontinuation $$
+CREATE PROCEDURE sp_populate_dwapi_etl_mat_discontinuation()
+BEGIN
+SELECT "Processing MAT discontinuation data... ";
+insert into dwapi_etl.etl_mat_discontinuation(
+    uuid,
+    encounter_provider,
+    patient_id,
+    visit_id,
+    visit_date,
+    location_id,
+    encounter_id,
+    type_of_discontinuation,
+    discontinuation_request,
+    reason_discontinued,
+    date_commenced,
+    date_created,
+    date_last_modified,
+    voided
+)
+select
+    e.uuid,
+    e.creator as encounter_provider,
+    e.patient_id,
+    e.visit_id,
+    e.encounter_datetime as visit_date,
+    e.location_id,
+    e.encounter_id,
+    max(if(o.concept_id = 164181, o.value_coded, null )) as type_of_discontinuation,
+    max(if(o.concept_id = 164089, o.value_coded, null )) as discontinuation_request,
+    COALESCE(
+            MAX(IF(o.concept_id = 160632, o.value_text, NULL)),
+            MAX(IF(o.concept_id = 161555, o.value_coded, NULL))
+    ) as reason_discontinued,
+    max(if(o.concept_id = 162549, o.value_datetime, null )) as date_commenced,
+    e.date_created as date_created,
+    if(max(o.date_created) > min(e.date_created),max(o.date_created),NULL) as date_last_modified,
+    e.voided
+from encounter e
+         inner join person p on p.person_id=e.patient_id and p.voided=0
+         inner join form f on f.form_id = e.form_id and f.uuid in ('38d6e116-b96c-4916-a821-b4dc83e2041d')
+         inner join obs o on o.encounter_id = e.encounter_id and o.concept_id in (164181,164089,160632,162549) and o.voided=0
+where e.voided=0
+group by e.encounter_id;
+
+SELECT "Completed processing MAT discontinuation data... ";
+END $$
 
 SET sql_mode=@OLD_SQL_MODE $$
 
@@ -10205,6 +10259,7 @@ CALL sp_populate_dwapi_etl_mat_clinical_encounter();
 CALL sp_populate_dwapi_etl_mat_transit();
 CALL sp_populate_dwapi_etl_mat_psychosocial_intake_and_followup();
 CALL sp_populate_dwapi_etl_mat_cessation();
+CALL sp_populate_dwapi_etl_mat_discontinuation();
 
 
 UPDATE kenyaemr_etl.etl_script_status SET stop_time=NOW() where id= populate_script_id;
