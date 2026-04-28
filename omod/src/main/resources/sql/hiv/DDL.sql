@@ -405,6 +405,54 @@ INDEX(visit_date, next_appointment_date)
 
 SELECT "Successfully created etl_patient_hiv_followup table";
 
+-- ------- create table etl_viral_load_validity_tracker -----------------------------------------
+SELECT "Creating etl_viral_load_validity_tracker table";
+DROP TABLE IF EXISTS kenyaemr_etl.etl_viral_load_validity_tracker;
+CREATE TABLE kenyaemr_etl.etl_viral_load_validity_tracker (
+patient_id INT(11) NOT NULL,
+visit_date DATE NOT NULL,
+lab_test INT(11),
+vl_result VARCHAR(50),
+date_created DATETIME,
+date_test_requested DATE,
+date_test_result_received DATE,
+base_viral_load_test_result VARCHAR(100),
+base_viral_load_test_date VARCHAR(100),
+urgency VARCHAR(100),
+order_reason VARCHAR(100),
+previous_test_result VARCHAR(100),
+previous_date_test_requested DATE,
+previous_date_test_result_received DATE,
+previous_urgency VARCHAR(100),
+previous_order_reason VARCHAR(100),
+date_started_art DATE,
+date_confirmed_hiv_positive DATE,
+latest_hiv_followup_visit DATE,
+latest_hiv_followup_visit_person_present DATE,
+breastfeeding_status VARCHAR(100),
+pregnancy_status VARCHAR(100),
+previous_hiv_followup_visit DATE,
+previous_breastfeeding_status VARCHAR(100),
+previous_pregnancy_status VARCHAR(100),
+lmp_date DATE,
+pregnancy_outcome VARCHAR(100),
+vl_due_date DATE,
+PRIMARY KEY (patient_id, visit_date),
+CONSTRAINT FOREIGN KEY (patient_id) REFERENCES kenyaemr_etl.etl_patient_demographics(patient_id),
+INDEX(vl_result),
+INDEX(date_test_requested),
+INDEX(base_viral_load_test_result),
+INDEX(previous_test_result),
+INDEX(previous_date_test_requested),
+INDEX(date_confirmed_hiv_positive),
+INDEX(breastfeeding_status),
+INDEX(pregnancy_status),
+INDEX(order_reason),
+INDEX(vl_due_date)
+);
+
+SELECT "Successfully created etl_viral_load_validity_tracker table";
+
 -- ------- create table etl_laboratory_extract-----------------------------------------
   SELECT "Creating etl_laboratory_extract table";
 CREATE TABLE kenyaemr_etl.etl_laboratory_extract (
@@ -1948,7 +1996,7 @@ SELECT "Successfully created etl_ART_preparation table";
     prep_type VARCHAR(255),
     prescribed_PrEP VARCHAR(10),
     regimen_prescribed VARCHAR(255),
-    months_prescribed_regimen INT(11),
+    months_prescribed_regimen VARCHAR(11),
     condoms_issued VARCHAR(10),
     number_of_condoms VARCHAR(10),
     appointment_given VARCHAR(10),
