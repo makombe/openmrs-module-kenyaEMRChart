@@ -1915,7 +1915,7 @@ SELECT "Successfully created etl_generalized_anxiety_disorder table";
     prep_type VARCHAR(255),
     prescribed_PrEP VARCHAR(10),
     regimen_prescribed VARCHAR(255),
-    months_prescribed_regimen INT(11),
+    months_prescribed_regimen VARCHAR(11),
     condoms_issued VARCHAR(10),
     number_of_condoms VARCHAR(10),
     appointment_given VARCHAR(10),

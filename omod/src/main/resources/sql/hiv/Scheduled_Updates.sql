@@ -2630,6 +2630,14 @@ CREATE PROCEDURE sp_update_etl_pharmacy_extract(IN last_update_time DATETIME)
 
 -- DELIMITER ;
 
+-- ------------------------------------- VL validity tracker updates ---------------------------
+
+DROP PROCEDURE IF EXISTS sp_update_etl_viral_load_validity_tracker $$
+CREATE PROCEDURE sp_update_etl_viral_load_validity_tracker()
+BEGIN
+    CALL sp_populate_etl_viral_load_validity_tracker();
+END $$
+
 -- ------------------------------------- laboratory updates ---------------------------
 
 
@@ -13009,6 +13017,7 @@ CREATE PROCEDURE sp_scheduled_updates()
     CALL sp_update_drug_event(last_update_time);
     CALL sp_update_etl_pharmacy_extract(last_update_time);
     CALL sp_update_etl_laboratory_extract(last_update_time);
+    CALL sp_update_etl_viral_load_validity_tracker();
     CALL sp_update_hts_test(last_update_time);
     CALL sp_update_hts_linkage_and_referral(last_update_time);
     CALL sp_update_hts_referral(last_update_time);
