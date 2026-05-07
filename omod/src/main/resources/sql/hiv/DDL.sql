@@ -4952,7 +4952,7 @@ CREATE TABLE kenyaemr_etl.etl_mat_cessation
     date_last_modified DATETIME,
     voided             INT(11),
     CONSTRAINT FOREIGN KEY (patient_id)
-        REFERENCES dwapi_etl.etl_patient_demographics (patient_id),
+        REFERENCES kenyaemr_etl.etl_patient_demographics (patient_id),
     CONSTRAINT unique_uuid UNIQUE (uuid),
     INDEX (patient_id),
     INDEX (visit_id),
@@ -4978,7 +4978,7 @@ CREATE TABLE kenyaemr_etl.etl_mat_discontinuation
     date_last_modified DATETIME,
     voided             INT(11),
     CONSTRAINT FOREIGN KEY (patient_id)
-        REFERENCES dwapi_etl.etl_patient_demographics (patient_id),
+        REFERENCES kenyaemr_etl.etl_patient_demographics (patient_id),
     CONSTRAINT unique_uuid UNIQUE (uuid),
     INDEX (patient_id),
     INDEX (visit_id),
