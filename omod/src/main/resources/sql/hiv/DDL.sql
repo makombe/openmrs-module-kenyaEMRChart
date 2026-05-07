@@ -130,7 +130,7 @@ DROP TABLE IF EXISTS kenyaemr_etl.etl_mat_clinical_encounter;
 DROP TABLE IF EXISTS kenyaemr_etl.etl_mat_transit;
 DROP TABLE IF EXISTS kenyaemr_etl.etl_mat_psychosocial_intake_and_followup;
 DROP TABLE IF EXISTS kenyaemr_etl.etl_mat_cessation;
-DROP TABLE IF EXISTS kenyaemr_etl.etl_mat_discontinuation;
+DROP TABLE IF EXISTS kenyaemr_etl.etl_mat_discontinuation ;
 
 -- create table etl_patient_demographics
 create table kenyaemr_etl.etl_patient_demographics (
