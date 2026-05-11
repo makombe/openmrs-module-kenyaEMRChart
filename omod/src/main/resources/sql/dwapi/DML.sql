@@ -9761,7 +9761,7 @@ BEGIN
                          from encounter_type
                          where uuid = 'e22e39fd-7db2-45e7-80f1-60fa0d5a4378') et
                         on et.encounter_type_id = e.encounter_type
-             inner join obs o on o.encounter_id = e.encounter_id and o.concept_id in (1640,168882,169403) and o.voided=0
+             inner join obs o on o.encounter_id = e.encounter_id and o.concept_id in (1640,168882,169403,165142) and o.voided=0
     group by e.encounter_id;
 
     SELECT "Completed processing Inpatient admission data... ";
