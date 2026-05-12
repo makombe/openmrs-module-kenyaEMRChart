@@ -4650,7 +4650,7 @@ CREATE TABLE kenyaemr_etl.etl_atp_disclosure_tracking
     other_who_brought_child_clinic                VARCHAR(255),
     clinic_report_child_knowsHave_Hiv            VARCHAR(50),
     child_knows_have_hiv                          VARCHAR(50),
-    child_know_have_illness                       VARCHAR(50), 
+    child_know_have_illness                       VARCHAR(50),
     child_response_why_take_medicaiton            VARCHAR(100),
     other_child_response_why_take_medicaiton      VARCHAR(255),
     who_brought_child_clinic_today                VARCHAR(255),
