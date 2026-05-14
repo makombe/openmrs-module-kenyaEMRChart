@@ -9214,7 +9214,7 @@ BEGIN
       inner join
       (
           select fup.patient_id, pat.visit_date, max(pat.start_date_time) patAppt, fup.appointment_date etlAppt from kenyaemr_etl.etl_prep_followup fup
-                                                                                                                         inner join kenyaemr_etl.etl_patient_appointment pat on pat.patient_id = fup.patient_id and pat.visit_date = fup.visit_date and pat.appointment_service_id in (7,8)
+                                                                                                                         inner join kenyaemr_etl.etl_patient_appointment pat on pat.patient_id = fup.patient_id and pat.visit_date = fup.visit_date and pat.appointment_service_id in (7,8,9)
           group by fup.patient_id, fup.visit_date
       ) apt on apt.patient_id = fup.patient_id and apt.visit_date = fup.visit_date
   set fup.appointment_date = apt.patAppt where fup.date_created >= last_update_time;
@@ -9225,7 +9225,7 @@ BEGIN
        from kenyaemr_etl.etl_prep_monthly_refill fup
                 inner join kenyaemr_etl.etl_patient_appointment pat
                            on pat.patient_id = fup.patient_id and pat.visit_date = fup.visit_date and
-                              pat.appointment_service_id = 9
+                              pat.appointment_service_id in (7,8,9)
        group by fup.patient_id, fup.visit_date) apt on apt.patient_id = fup.patient_id and apt.visit_date = fup.visit_date
   set fup.next_appointment = apt.patAppt
   where fup.date_created >= last_update_time;
