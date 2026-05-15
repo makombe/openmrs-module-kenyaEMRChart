@@ -12736,6 +12736,11 @@ from encounter e
          inner join form f on f.form_id = e.form_id and f.uuid in ('9a9cadd7-fba1-4a24-94aa-43edfbecf8d9')
          inner join obs o on o.encounter_id = e.encounter_id and o.concept_id in (164181,166636,160112,160638,1473,163181) and o.voided=0
 where e.voided=0
+  and (e.date_created >= last_update_time
+    or e.date_changed >= last_update_time
+    or e.date_voided >= last_update_time
+    or o.date_created >= last_update_time
+    or o.date_voided >= last_update_time)
 group by e.encounter_id
     ON DUPLICATE KEY UPDATE provider=VALUES(provider),
     visit_date=VALUES(visit_date),
@@ -12816,6 +12821,11 @@ from encounter e
                                                                                   165041,165254,159926,1284,164401,159926,
                                                                                   165248,167370,167369,165302) and o.voided=0
 where e.voided=0
+  and (e.date_created >= last_update_time
+    or e.date_changed >= last_update_time
+    or e.date_voided >= last_update_time
+    or o.date_created >= last_update_time
+    or o.date_voided >= last_update_time)
 group by e.encounter_id
     ON DUPLICATE KEY UPDATE provider=VALUES(provider),
     visit_date=VALUES(visit_date),
@@ -12877,6 +12887,11 @@ from encounter e
          inner join form f on f.form_id = e.form_id and f.uuid in ('b9495048-eceb-4dd2-bfba-330dc4900ee9')
          inner join obs o on o.encounter_id = e.encounter_id and o.concept_id in (1768,167369,166865) and o.voided=0
 where e.voided=0
+  and (e.date_created >= last_update_time
+    or e.date_changed >= last_update_time
+    or e.date_voided >= last_update_time
+    or o.date_created >= last_update_time
+    or o.date_voided >= last_update_time)
 group by e.encounter_id
     ON DUPLICATE KEY UPDATE provider=VALUES(provider),
     visit_date=VALUES(visit_date),
@@ -12930,6 +12945,11 @@ from encounter e
          inner join form f on f.form_id = e.form_id and f.uuid in ('cfd2109b-63b3-43de-8bb3-682e80c5a965')
          inner join obs o on o.encounter_id = e.encounter_id and o.concept_id in (167161,163556,167530,165138,164352) and o.voided=0
 where e.voided=0
+  and (e.date_created >= last_update_time
+    or e.date_changed >= last_update_time
+    or e.date_voided >= last_update_time
+    or o.date_created >= last_update_time
+    or o.date_voided >= last_update_time)
 group by e.encounter_id
     ON DUPLICATE KEY UPDATE provider=VALUES(provider),
     visit_date=VALUES(visit_date),
@@ -12980,6 +13000,11 @@ from encounter e
          inner join form f on f.form_id = e.form_id and f.uuid in ('fa58cbc1-91c8-4920-813b-fde7fd69533b')
          inner join obs o on o.encounter_id = e.encounter_id and o.concept_id in (164075,165066) and o.voided=0
 where e.voided=0
+  and (e.date_created >= last_update_time
+    or e.date_changed >= last_update_time
+    or e.date_voided >= last_update_time
+    or o.date_created >= last_update_time
+    or o.date_voided >= last_update_time)
 group by e.encounter_id
     ON DUPLICATE KEY UPDATE provider=VALUES(provider),
     visit_date=VALUES(visit_date),
@@ -13036,6 +13061,11 @@ SELECT "Processing MAT discontinuation data... ";
              inner join form f on f.form_id = e.form_id and f.uuid in ('38d6e116-b96c-4916-a821-b4dc83e2041d')
              inner join obs o on o.encounter_id = e.encounter_id and o.concept_id in (164181,164089,160632,162549) and o.voided=0
     where e.voided=0
+      and (e.date_created >= last_update_time
+        or e.date_changed >= last_update_time
+        or e.date_voided >= last_update_time
+        or o.date_created >= last_update_time
+        or o.date_voided >= last_update_time)
     group by e.encounter_id
         ON DUPLICATE KEY UPDATE provider=VALUES(provider),
         visit_date=VALUES(visit_date),
